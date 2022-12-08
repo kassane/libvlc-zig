@@ -1,14 +1,16 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) void {
-    make_example(b, "print_version", "examples/print_version.zig");
+    const mode = b.standardReleaseOptions();
+    const target = b.standardTargetOptions(.{});
+
+    make_example(b, mode, target, "print_version", "examples/print_version.zig");
+    make_example(b, mode, target, "player", "examples/player.zig");
 }
-fn make_example(b: *std.build.Builder, name: []const u8, path: []const u8) void {
+fn make_example(b: *std.build.Builder,  mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8) void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const alloc = gpa.allocator();
 
-    const mode = b.standardReleaseOptions();
-    const target = b.standardTargetOptions(.{});
     const example = b.addExecutable(name, path);
     example.setBuildMode(mode);
     example.setTarget(target);
