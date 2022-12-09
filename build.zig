@@ -7,7 +7,7 @@ pub fn build(b: *std.build.Builder) void {
     make_example(b, mode, target, "print_version", "examples/print_version.zig");
     make_example(b, mode, target, "player", "examples/player.zig");
 }
-fn make_example(b: *std.build.Builder,  mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8) void {
+fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8) void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const alloc = gpa.allocator();
 
@@ -15,6 +15,7 @@ fn make_example(b: *std.build.Builder,  mode: std.builtin.Mode, target: std.zig.
     example.setBuildMode(mode);
     example.setTarget(target);
     example.linkSystemLibrary("vlc");
+    example.linkSystemLibrary("vlccore");
     example.addPackagePath("vlc", "src/vlc.zig");
     example.linkLibC();
     example.install();

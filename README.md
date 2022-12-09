@@ -12,6 +12,7 @@ Zig bindings for libVLC media framework.
 
 ```bash
 $> zig build print_version -Drelease-safe
+$> zig build player -Drelease-safe -- -i /path/multimedia_file
 ```
 
 ## License
