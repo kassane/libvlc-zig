@@ -68,7 +68,7 @@ pub fn clearerr() void {
 // pub fn printerr(fmt: [*:0]const u8) [*:0]const u8 {
 //     return c.libvlc_printerr(fmt);
 // }
-pub fn new(argc: c_int, argv: [*c]const [*:0]const u8) ?*Instance_t {
+pub fn new(argc: c_int, argv: [*c]const [*c]const u8) ?*Instance_t {
     return c.libvlc_new(argc, argv);
 }
 pub fn release(p_instance: ?*Instance_t) void {

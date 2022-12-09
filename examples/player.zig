@@ -13,8 +13,6 @@ pub fn main() !void {
     var mp: ?*vlc.Media_player_t = null;
     var m: ?*vlc.Media_t = null;
 
-    // load the vlc engine
-    var inst: ?*vlc.Instance_t = vlc.new(0, null);
     var argc: usize = 0;
     while (argc < args.len) {
         argc += 1;
@@ -23,7 +21,9 @@ pub fn main() !void {
             usage() catch @panic("Cannot be print help!");
             return;
         }
-
+        // load the vlc engine
+        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &[_][*c]const u8{"--verbose=2"});
+        
         // create a new item
         if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
             if (args.len < 3) {
