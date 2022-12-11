@@ -1,7 +1,25 @@
+//! BSD 2-Clause License
+//! Copyright (c) 2022, Matheus Catarino França
+//
+//! Redistribution and use in source and binary forms, with or without
+//! modification, are permitted provided that the following conditions are met:
+//! 1. Redistributions of source code must retain the above copyright notice, this
+//!    list of conditions and the following disclaimer.
+//! 2. Redistributions in binary form must reproduce the above copyright notice,
+//!    this list of conditions and the following disclaimer in the documentation
+//!    and/or other materials provided with the distribution.
+
 const c = @cImport({
-    @cInclude("vlc/libvlc.h");
-    // @cInclude("vlc/libvlc_media_player.h");
+    @cInclude("vlc/vlc.h");
+    @cDefine("struct_a", ""); //fixme: translate-c error fixed ( missing opaque struct)
 });
+pub usingnamespace c;
+
+pub usingnamespace switch (@import("builtin").os.tag) {
+    .linux => @cImport(@cInclude("unistd.h")),
+    .windows => @cImport(@cInclude("windows.h")),
+    else => @compileError("Undefined"),
+};
 
 pub const Callback_t = c.libvlc_callback_t;
 pub const Instance_t = c.libvlc_instance_t;
@@ -10,8 +28,8 @@ pub const Event_Type_t = c.libvlc_event_type_t;
 pub const Event_Manage_t = c.libvlc_event_manager_t;
 pub const Time_t = c.libvlc_time_t;
 pub const Log_t = c.libvlc_log_t;
-pub const Media_t = libvlc_media_t;
-pub const Media_player_t = libvlc_media_player_t;
+pub const Media_t = c.libvlc_media_t;
+pub const Media_player_t = c.libvlc_media_player_t;
 
 pub const log_level = enum(c_int) {
     LIBVLC_DEBUG = 0,
@@ -185,73 +203,3 @@ pub const libvlc_meta_t = enum(c_uint) {
     libvlc_meta_DiscNumber,
     libvlc_meta_DiscTotal,
 };
-pub const libvlc_media_open_cb = ?*const fn (?*anyopaque, [*c]?*anyopaque, [*c]u64) callconv(.C) c_int;
-pub const libvlc_media_read_cb = ?*const fn (?*anyopaque, [*c]u8, usize) callconv(.C) isize;
-pub const libvlc_media_seek_cb = ?*const fn (?*anyopaque, u64) callconv(.C) c_int;
-pub const libvlc_media_close_cb = ?*const fn (?*anyopaque) callconv(.C) void;
-pub extern fn libvlc_media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*libvlc_media_t;
-pub extern fn libvlc_media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*libvlc_media_t;
-pub extern fn libvlc_media_new_fd(p_instance: ?*Instance_t, fd: c_int) ?*libvlc_media_t;
-pub extern fn libvlc_media_new_callbacks(instance: ?*Instance_t, open_cb: libvlc_media_open_cb, read_cb: libvlc_media_read_cb, seek_cb: libvlc_media_seek_cb, close_cb: libvlc_media_close_cb, @"opaque": ?*anyopaque) ?*libvlc_media_t;
-pub extern fn libvlc_media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*libvlc_media_t;
-pub extern fn libvlc_media_add_option(p_md: ?*libvlc_media_t, psz_options: [*:0]const u8) void;
-pub extern fn libvlc_media_add_option_flag(p_md: ?*libvlc_media_t, psz_options: [*:0]const u8, i_flags: c_uint) void;
-pub extern fn libvlc_media_retain(p_md: ?*libvlc_media_t) void;
-pub extern fn libvlc_media_release(p_md: ?*libvlc_media_t) void;
-pub extern fn libvlc_media_get_mrl(p_md: ?*libvlc_media_t) [*c]u8;
-pub extern fn libvlc_media_duplicate(p_md: ?*libvlc_media_t) ?*libvlc_media_t;
-pub extern fn libvlc_media_get_meta(p_md: ?*libvlc_media_t, e_meta: libvlc_meta_t) [*c]u8;
-pub extern fn libvlc_media_set_meta(p_md: ?*libvlc_media_t, e_meta: libvlc_meta_t, psz_value: [*:0]const u8) void;
-pub extern fn libvlc_media_save_meta(p_md: ?*libvlc_media_t) c_int;
-pub extern fn libvlc_media_get_state(p_md: ?*libvlc_media_t) libvlc_state_t;
-pub extern fn libvlc_media_get_stats(p_md: ?*libvlc_media_t, p_stats: [*c]libvlc_media_stats_t) c_int;
-pub const struct_libvlc_media_list_t = opaque {};
-pub extern fn libvlc_media_subitems(p_md: ?*libvlc_media_t) ?*struct_libvlc_media_list_t;
-pub extern fn libvlc_media_event_manager(p_md: ?*libvlc_media_t) ?*Event_Manage_t;
-pub extern fn libvlc_media_get_duration(p_md: ?*libvlc_media_t) libvlc_time_t;
-pub extern fn libvlc_media_parse_with_options(p_md: ?*libvlc_media_t, parse_flag: libvlc_media_parse_flag_t, timeout: c_int) c_int;
-pub extern fn libvlc_media_parse_stop(p_md: ?*libvlc_media_t) void;
-pub extern fn libvlc_media_get_parsed_status(p_md: ?*libvlc_media_t) libvlc_media_parsed_status_t;
-pub extern fn libvlc_media_set_user_data(p_md: ?*libvlc_media_t, p_new_user_data: ?*anyopaque) void;
-pub extern fn libvlc_media_get_user_data(p_md: ?*libvlc_media_t) ?*anyopaque;
-pub extern fn libvlc_media_tracks_get(p_md: ?*libvlc_media_t, tracks: [*c][*c][*c]libvlc_media_track_t) c_uint;
-pub extern fn libvlc_media_get_codec_description(i_type: libvlc_track_type_t, i_codec: u32) [*:0]const u8;
-pub extern fn libvlc_media_tracks_release(p_tracks: [*c][*c]libvlc_media_track_t, i_count: c_uint) void;
-pub extern fn libvlc_media_get_type(p_md: ?*libvlc_media_t) libvlc_media_type_t;
-pub extern fn libvlc_media_slaves_add(p_md: ?*libvlc_media_t, i_type: libvlc_media_slave_type_t, i_priority: c_uint, psz_uri: [*:0]const u8) c_int;
-pub extern fn libvlc_media_slaves_clear(p_md: ?*libvlc_media_t) void;
-pub extern fn libvlc_media_slaves_get(p_md: ?*libvlc_media_t, ppp_slaves: [*c][*c][*c]libvlc_media_slave_t) c_uint;
-pub extern fn libvlc_media_slaves_release(pp_slaves: [*c][*c]libvlc_media_slave_t, i_count: c_uint) void;
-const libvlc_media_player_t = opaque {};
-const libvlc_media_t = opaque {};
-pub const struct_libvlc_equalizer_t = opaque {};
-pub const libvlc_equalizer_t = struct_libvlc_equalizer_t;
-pub extern fn libvlc_media_player_new(p_libvlc_instance: ?*Instance_t) ?*libvlc_media_player_t;
-pub extern fn libvlc_media_player_new_from_media(p_md: ?*libvlc_media_t) ?*libvlc_media_player_t;
-pub extern fn libvlc_media_player_release(p_mi: ?*libvlc_media_player_t) void;
-pub extern fn libvlc_media_player_retain(p_mi: ?*libvlc_media_player_t) void;
-pub extern fn libvlc_media_player_set_media(p_mi: ?*libvlc_media_player_t, p_md: ?*libvlc_media_t) void;
-pub extern fn libvlc_media_player_get_media(p_mi: ?*libvlc_media_player_t) ?*libvlc_media_t;
-pub extern fn libvlc_media_player_event_manager(p_mi: ?*libvlc_media_player_t) ?*Event_Manage_t;
-pub extern fn libvlc_media_player_is_playing(p_mi: ?*libvlc_media_player_t) c_int;
-pub extern fn libvlc_media_player_play(p_mi: ?*libvlc_media_player_t) c_int;
-pub extern fn libvlc_media_player_set_pause(mp: ?*libvlc_media_player_t, do_pause: c_int) void;
-pub extern fn libvlc_media_player_pause(p_mi: ?*libvlc_media_player_t) void;
-pub extern fn libvlc_media_player_stop(p_mi: ?*libvlc_media_player_t) void;
-pub extern fn libvlc_media_player_set_renderer(p_mi: ?*libvlc_media_player_t, p_item: ?*libvlc_renderer_item_t) c_int;
-pub const libvlc_video_lock_cb = ?*const fn (?*anyopaque, [*c]?*anyopaque) callconv(.C) ?*anyopaque;
-pub const libvlc_video_unlock_cb = ?*const fn (?*anyopaque, ?*anyopaque, [*c]const ?*anyopaque) callconv(.C) void;
-pub const libvlc_video_display_cb = ?*const fn (?*anyopaque, ?*anyopaque) callconv(.C) void;
-pub const libvlc_video_format_cb = ?*const fn ([*c]?*anyopaque, [*c]u8, [*c]c_uint, [*c]c_uint, [*c]c_uint, [*c]c_uint) callconv(.C) c_uint;
-pub const libvlc_video_cleanup_cb = ?*const fn (?*anyopaque) callconv(.C) void;
-pub extern fn libvlc_video_set_callbacks(mp: ?*libvlc_media_player_t, lock: libvlc_video_lock_cb, unlock: libvlc_video_unlock_cb, display: libvlc_video_display_cb, @"opaque": ?*anyopaque) void;
-pub extern fn libvlc_video_set_format(mp: ?*libvlc_media_player_t, chroma: [*:0]const u8, width: c_uint, height: c_uint, pitch: c_uint) void;
-pub extern fn libvlc_video_set_format_callbacks(mp: ?*libvlc_media_player_t, setup: libvlc_video_format_cb, cleanup: libvlc_video_cleanup_cb) void;
-pub extern fn libvlc_media_player_set_nsobject(p_mi: ?*libvlc_media_player_t, drawable: ?*anyopaque) void;
-pub extern fn libvlc_media_player_get_nsobject(p_mi: ?*libvlc_media_player_t) ?*anyopaque;
-pub extern fn libvlc_media_player_set_xwindow(p_mi: ?*libvlc_media_player_t, drawable: u32) void;
-pub extern fn libvlc_media_player_get_xwindow(p_mi: ?*libvlc_media_player_t) u32;
-pub extern fn libvlc_media_player_set_hwnd(p_mi: ?*libvlc_media_player_t, drawable: ?*anyopaque) void;
-pub extern fn libvlc_media_player_get_hwnd(p_mi: ?*libvlc_media_player_t) ?*anyopaque;
-pub extern fn libvlc_media_player_set_android_context(p_mi: ?*libvlc_media_player_t, p_awindow_handler: ?*anyopaque) void;
-pub extern fn libvlc_media_player_set_evas_object(p_mi: ?*libvlc_media_player_t, p_evas_object: ?*anyopaque) c_int;

@@ -2,13 +2,12 @@ const std = @import("std");
 const vlc = @import("vlc");
 const stdout = std.io.getStdOut().writer();
 const strcmp = std.mem.eql;
-const strcontain = std.mem.startsWith;
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const arena_allocator = arena.allocator();
-    const args = try std.process.argsAlloc(arena_allocator);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const args = try std.process.argsAlloc(gpa.allocator());
+    defer std.process.argsFree(gpa.allocator(), args);
 
     var mp: ?*vlc.Media_player_t = null;
     var m: ?*vlc.Media_t = null;
@@ -22,18 +21,17 @@ pub fn main() !void {
             return;
         }
         // load the vlc engine
-        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &[_][*c]const u8{"--verbose=2"});
-        
+        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &[_][*c]const u8{"--verbose=0"});
+
         // create a new item
         if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
             if (args.len < 3) {
                 stdout.print("Missing file to exec [argc:{}]!\n", .{args.len}) catch @panic("Cannot print");
                 break;
             } else {
+                // std.debug.print("input: {s}\n", .{@ptrCast([*c]const u8, args[argc+1].ptr)});
                 argc += 1;
-                // std.debug.print("input: {s}\n", .{args[argc]});
-
-                m = vlc.libvlc_media_new_path(inst, args[argc]);
+                m = vlc.libvlc_media_new_path(inst, @ptrCast([*c]const u8, args[argc].ptr));
             }
         }
         if (strcmp(u8, args[argc], "--url") or strcmp(u8, args[argc], "-u")) {
@@ -41,10 +39,9 @@ pub fn main() !void {
                 stdout.print("Missing URL file to exec [argc: {}]!\n", .{args.len}) catch @panic("Cannot print");
                 break;
             } else {
-                argc += 1;
                 // std.debug.print("input: {s}\n", .{args[argc]});
-
-                m = vlc.libvlc_media_new_location(inst, args[argc]);
+                argc += 1;
+                m = vlc.libvlc_media_new_location(inst, @ptrCast([*c]const u8, args[argc].ptr));
             }
         }
 
@@ -52,20 +49,20 @@ pub fn main() !void {
         mp = vlc.libvlc_media_player_new_from_media(m);
 
         // no need to keep the media now
-        vlc.libvlc_media_release(m);
+        defer vlc.libvlc_media_release(m);
 
         // play the media_player
         if (vlc.libvlc_media_player_play(mp) < 0) @panic("Cannot be played!");
 
-        std.time.sleep(10);
+        _ = vlc.sleep(40);
 
         // stop playing
         vlc.libvlc_media_player_stop(mp);
 
         // free the media_player
-        vlc.libvlc_media_player_release(mp);
+        defer vlc.libvlc_media_player_release(mp);
 
-        vlc.release(inst);
+        defer vlc.release(inst);
         break;
     }
 }

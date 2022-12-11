@@ -1,21 +1,34 @@
 const std = @import("std");
+const sdl = @import("vendor/SDL2-zig/Sdk.zig");
+const Options = struct {
+    sdl_enabled: bool,
+};
 
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
-    make_example(b, mode, target, "print_version", "examples/print_version.zig");
-    make_example(b, mode, target, "player", "examples/player.zig");
+    var enabled = Options{ .sdl_enabled = false };
+
+    make_example(b, mode, target, "print_version", "examples/print_version.zig", enabled);
+    make_example(b, mode, target, "cli-player", "examples/player.zig", enabled);
+    enabled.sdl_enabled = true;
+    make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", enabled);
 }
-fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8) void {
+
+fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8, option: Options) void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const alloc = gpa.allocator();
 
     const example = b.addExecutable(name, path);
     example.setBuildMode(mode);
     example.setTarget(target);
-    example.linkSystemLibrary("vlc");
-    example.linkSystemLibrary("vlccore");
+    if (option.sdl_enabled) {
+        const sdk = sdl.init(b);
+        example.addPackage(sdk.getNativePackage("sdl2"));
+        sdk.link(example, .dynamic);
+    }
+    example.linkSystemLibraryNeededPkgConfigOnly("libvlc");
     example.addPackagePath("vlc", "src/vlc.zig");
     example.linkLibC();
     example.install();
