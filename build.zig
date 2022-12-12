@@ -27,6 +27,7 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     const example = b.addExecutable(name, path);
     example.setBuildMode(mode);
     example.setTarget(target);
+    example.addIncludePath("vendor/vlc/include");
     if (option.sdl_enabled) {
         // import SDL bindings
         const sdl = @import("vendor/SDL2-zig/Sdk.zig");
