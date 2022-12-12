@@ -2,6 +2,7 @@ const std = @import("std");
 
 const Options = struct {
     sdl_enabled: bool,
+    // capy_enabled: bool, //TODO
 };
 
 pub fn build(b: *std.build.Builder) void {
@@ -13,8 +14,11 @@ pub fn build(b: *std.build.Builder) void {
     make_example(b, mode, target, "print_version", "examples/print_version.zig", op);
     make_example(b, mode, target, "cli-player", "examples/cli_player.zig", op);
 
-    op.sdl_enabled = true;
-    make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", op);
+    const sdl2_isEnabled = b.option(bool, "SDL2", "Use SDL2 [default: off]") orelse false;
+    if (sdl2_isEnabled) {
+        op.sdl_enabled = sdl2_isEnabled;
+        make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", op);
+    }
 }
 
 fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8, option: Options) void {
