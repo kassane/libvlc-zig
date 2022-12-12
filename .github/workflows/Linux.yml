@@ -3,13 +3,13 @@ name: Linux
 on: [push, pull_request]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-          with:
-            submodules: recursive
-            fetch-depth: 0
+        with:
+          submodules: recursive
+          fetch-depth: 0
       
       - name: Install Zig
         uses: goto-bus-stop/setup-zig@v2
