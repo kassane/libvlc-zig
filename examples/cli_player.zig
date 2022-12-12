@@ -9,39 +9,48 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(gpa.allocator());
     defer std.process.argsFree(gpa.allocator(), args);
 
+    const vlc_args = [_][*c]const u8{
+        // Debug
+        "--verbose=2",
+
+        // Apply a video filter.
+        //"--video-filter", "sepia",
+        //"--sepia-intensity=200"
+    };
+
     var mp: ?*vlc.Media_player_t = null;
     var m: ?*vlc.Media_t = null;
 
     var argc: usize = 0;
     while (argc < args.len) {
         argc += 1;
+
         // Help message
         if (args.len <= 1 or strcmp(u8, args[argc], "-h") or strcmp(u8, args[argc], "--help")) {
             usage() catch @panic("Cannot be print help!");
             return;
         }
+
         // load the vlc engine
-        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &[_][*c]const u8{"--verbose=0"});
+        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &vlc_args);
 
         // create a new item
         if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
             if (args.len < 3) {
-                stdout.print("Missing file to exec [argc:{}]!\n", .{args.len}) catch @panic("Cannot print");
+                try stdout.print("Missing file to exec [argc:{}]!\n", .{args.len});
                 break;
             } else {
-                // std.debug.print("input: {s}\n", .{@ptrCast([*c]const u8, args[argc+1].ptr)});
                 argc += 1;
-                m = vlc.libvlc_media_new_path(inst, @ptrCast([*c]const u8, args[argc].ptr));
+                m = vlc.media_new_path(inst, args[argc]);
             }
         }
         if (strcmp(u8, args[argc], "--url") or strcmp(u8, args[argc], "-u")) {
             if (args.len < 3) {
-                stdout.print("Missing URL file to exec [argc: {}]!\n", .{args.len}) catch @panic("Cannot print");
+                try stdout.print("Missing URL file to exec [argc: {}]!\n", .{args.len});
                 break;
             } else {
-                // std.debug.print("input: {s}\n", .{args[argc]});
                 argc += 1;
-                m = vlc.libvlc_media_new_location(inst, @ptrCast([*c]const u8, args[argc].ptr));
+                m = vlc.media_new_location(inst, args[argc]);
             }
         }
 
@@ -72,8 +81,8 @@ fn usage() !void {
         \\cli-player [options]
         \\
         \\Options:
-        \\  -i, --input: Open local multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
-        \\  -u, --url:   Open online multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
+        \\  -i, --input: Open local multimedia [*formats(mp4, mp3, webm, avi, rmvb, ...)],
+        \\  -u, --url:   Open online multimedia [*hosts(file:///, rtsp://, http://, ftp://, https://,...)],
         \\  -h, --help:  This message,
         \\
     , .{});

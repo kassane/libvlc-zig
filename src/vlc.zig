@@ -9,16 +9,19 @@
 //!    this list of conditions and the following disclaimer in the documentation
 //!    and/or other materials provided with the distribution.
 
+// VLC - C API
 const c = @cImport({
     @cInclude("vlc/vlc.h");
-    @cDefine("struct_a", ""); //fixme: translate-c error fixed ( missing opaque struct)
+    @cDefine("struct_a", ""); // fixme: translate-c error fixed (missing opaque struct)
 });
 pub usingnamespace c;
 
+// Native OS - C API
 pub usingnamespace switch (@import("builtin").os.tag) {
     .linux => @cImport(@cInclude("unistd.h")),
     .windows => @cImport(@cInclude("windows.h")),
-    else => @compileError("Undefined"),
+    // .ios, .macos, .watchos, .tvos => TODO (Darwin),
+    else => @compileError("Unsupported operational system!"),
 };
 
 pub const Callback_t = c.libvlc_callback_t;
@@ -30,6 +33,10 @@ pub const Time_t = c.libvlc_time_t;
 pub const Log_t = c.libvlc_log_t;
 pub const Media_t = c.libvlc_media_t;
 pub const Media_player_t = c.libvlc_media_player_t;
+pub const mediaOpen_callback = c.libvlc_media_open_cb;
+pub const mediaSeek_callback = c.libvlc_media_seek_cb;
+pub const mediaClose_callback = c.libvlc_media_close_cb;
+pub const mediaRead_callback = c.libvlc_media_read_cb;
 
 pub const log_level = enum(c_int) {
     LIBVLC_DEBUG = 0,
@@ -80,12 +87,6 @@ pub fn free(ptr: ?*anyopaque) void {
 pub fn clearerr() void {
     c.libvlc_clearerr();
 }
-// pub fn vprinterr(fmt: [*:0]const u8, ap: [*c]c.struct___va_list_tag) [*:0]const u8 {
-//     return c.libvlc_vprinterr(fmt, ap);
-// }
-// pub fn printerr(fmt: [*:0]const u8) [*:0]const u8 {
-//     return c.libvlc_printerr(fmt);
-// }
 pub fn new(argc: c_int, argv: [*c]const [*c]const u8) ?*Instance_t {
     return c.libvlc_new(argc, argv);
 }
@@ -107,6 +108,25 @@ pub fn set_user_agent(p_instance: ?*Instance_t, name: [*:0]const u8, http: [*:0]
 pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]const u8, icon: [*:0]const u8) void {
     c.libvlc_set_app_id(p_instance, id, version, icon);
 }
+pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
+    return c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl));
+}
+pub fn media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*Media_t {
+    return c.libvlc_media_new_path(p_instance, @ptrCast([*c]const u8, path));
+}
+pub fn media_new_fd(p_instance: ?*Instance_t, fd: c_int) ?*Media_t {
+    return c.libvlc_media_new_fd(p_instance, fd);
+}
+pub fn media_new_callbacks(p_instance: ?*Instance_t, open: mediaOpen_callback, read: mediaRead_callback, seek: mediaSeek_callback, close: mediaClose_callback, ptr: ?*anyopaque) ?*Media_t{
+    return c.libvlc_media_new_callbacks(p_instance, open, read, seek, close, ptr);
+}
+pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Media_t{
+    return c.libvlc_media_new_as_node(p_instance, @ptrCast([*c]const u8, psz_name));
+}
+pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void{
+    c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
+}
+
 pub const libvlc_media_slave_t = extern struct {
     psz_uri: [*c]u8,
     i_type: libvlc_media_slave_type_t,

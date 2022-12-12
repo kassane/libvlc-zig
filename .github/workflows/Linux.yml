@@ -1,0 +1,32 @@
+name: Linux
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.10.0
+      
+      - name: Install dependences
+        run: |
+            sudo apt update
+            sudo apt install libvlc-dev libsdl2-dev -y
+
+      - name: build & run example
+        run: |
+            zig build print_version
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.10.0
+      - run: |
+            rm -rf zig-cache
+            zig fmt --check --ast-check **.zig

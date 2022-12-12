@@ -21,10 +21,10 @@ const Context = extern struct {
 };
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const arena_allocator = arena.allocator();
-    const args = try std.process.argsAlloc(arena_allocator);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const args = try std.process.argsAlloc(gpa.allocator());
+    defer std.process.argsFree(gpa.allocator(), args);
 
     const vlc_args = [_][*c]const u8{
         // Debug
@@ -73,7 +73,7 @@ pub fn main() !void {
 
 fn usage() !void {
     try stdout.print(
-        \\cli-player [options]
+        \\sdl-player [options]
         \\
         \\Options:
         \\  -i, --input: Open local multimedia [*formats(mp4,mp3,webm,avi,rmvb)],

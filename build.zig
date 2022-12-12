@@ -8,17 +8,17 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
-    var enabled = Options{ .sdl_enabled = false };
+    var op = Options{ .sdl_enabled = false };
 
-    make_example(b, mode, target, "print_version", "examples/print_version.zig", enabled);
-    make_example(b, mode, target, "cli-player", "examples/player.zig", enabled);
-    enabled.sdl_enabled = true;
-    make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", enabled);
+    make_example(b, mode, target, "print_version", "examples/print_version.zig", op);
+    make_example(b, mode, target, "cli-player", "examples/cli_player.zig", op);
+
+    op.sdl_enabled = true;
+    make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", op);
 }
 
 fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8, option: Options) void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const alloc = gpa.allocator();
+    var bf: [100]u8 = undefined;
 
     const example = b.addExecutable(name, path);
     example.setBuildMode(mode);
@@ -39,7 +39,7 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
         run_cmd.addArgs(args);
     }
 
-    var descr = std.fmt.allocPrintZ(alloc, "Run the {s} example", .{name}) catch unreachable;
+    var descr = std.fmt.bufPrintZ(&bf, "Run the {s} example", .{name}) catch unreachable;
     const run_step = b.step(name, descr);
     run_step.dependOn(&run_cmd.step);
 }
