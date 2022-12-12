@@ -1,5 +1,5 @@
 const std = @import("std");
-const sdl = @import("vendor/SDL2-zig/Sdk.zig");
+
 const Options = struct {
     sdl_enabled: bool,
 };
@@ -24,11 +24,18 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     example.setBuildMode(mode);
     example.setTarget(target);
     if (option.sdl_enabled) {
+        // import SDL bindings
+        const sdl = @import("vendor/SDL2-zig/Sdk.zig");
+
         const sdk = sdl.init(b);
         example.addPackage(sdk.getNativePackage("sdl2"));
         sdk.link(example, .dynamic);
     }
-    example.linkSystemLibraryNeededPkgConfigOnly("libvlc");
+    if (target.isLinux()) {
+        example.linkSystemLibraryPkgConfigOnly("libvlc");
+    } else {
+        example.linkSystemLibrary("vlc");
+    }
     example.addPackagePath("vlc", "src/vlc.zig");
     example.linkLibC();
     example.install();

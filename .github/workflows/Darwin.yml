@@ -1,0 +1,26 @@
+name: MacOS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install
+        run: |
+            brew install sdl2 && \
+            brew install --cask vlc
+
+      - name: Install zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.10.0
+          
+      - name: Build & Run
+        run: |
+            zig build print_version -freference-trace

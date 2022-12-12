@@ -1,0 +1,51 @@
+name: MSYS2 (MingW)
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { msystem: MINGW64, arch: x86_64, prefix: /mingw64 },
+          { msystem: MINGW32, arch: i686, prefix: /mingw32   }
+        ]
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: temp
+          submodules: recursive
+          fetch-depth: 0
+      
+      - name: Install zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.10.0
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          path-type: inherit
+          install: git unzip mingw-w64-${{ matrix.arch }}-pkg-config mingw-w64-${{ matrix.arch }}-sdl2 mingw-w64-${{ matrix.arch }}-vlc
+          update: true
+      
+      - name: Move Checkout
+        run: |
+          Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
+      
+      - name: Build & Tests (x86)
+        shell: msys2 {0}
+        if: ${{ matrix.arch == 'i686' }}
+        run: |
+            cd /C/_
+            zig build print_version -freference-trace -Dtarget=i386-windows-gnu
+        
+      - name: Build & Tests (x86_x64)
+        shell: msys2 {0}
+        if: ${{ matrix.arch == 'x86_64' }}
+        run: |
+            cd /C/_
+            zig build print_version -freference-trace -Dtarget=x86_64-windows-gnu
