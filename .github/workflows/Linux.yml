@@ -7,7 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: goto-bus-stop/setup-zig@v2
+          with:
+            submodules: recursive
+            fetch-depth: 0
+      
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
         with:
           version: 0.10.0
       
@@ -16,9 +21,13 @@ jobs:
             sudo apt update
             sudo apt install libvlc-dev libsdl2-dev -y
 
-      - name: build & run example
+      - name: build
         run: |
-            zig build print_version
+            zig build -freference-trace
+
+      - name: run print_version (example)
+        run: |
+            zig build print_version -freference-trace
 
   lint:
     runs-on: ubuntu-latest
