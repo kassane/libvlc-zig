@@ -1,0 +1,36 @@
+name: Linux
+
+on:
+  push:
+    paths:
+      - '**.zig'
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.10.0
+      
+      - name: Install dependences
+        run: |
+            sudo apt update
+            sudo apt install libvlc-dev libsdl2-dev -y
+
+      - name: build
+        run: |
+            zig build -freference-trace
+
+      - name: run print_version (example)
+        run: |
+            zig build run -freference-trace
