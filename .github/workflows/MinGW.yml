@@ -36,11 +36,33 @@ jobs:
         run: |
           Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
       
+            - name: Create SDK file
+        
+      - name: Generate SDK file
+        uses: DamianReeves/write-file-action@v1.0
+        with:
+          path: .build_config/sdl.json
+          contents: |
+            {
+              "i386-windows-gnu": {
+                "include": "SDL2-2.0.18/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/i686-w64-mingw32/bin"
+              },
+              "x86_64-windows-gnu": {
+                "include": "SDL2-2.0.18/x86_64-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/x86_64-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/x86_64-w64-mingw32/bin"
+              }
+            }
+          write-mode: overwrite
+
       - name: Build & Tests (x86)
         shell: msys2 {0}
         if: ${{ matrix.arch == 'i686' }}
         run: |
             cd /C/_
+            zig build -DSDL2
             zig build print_version -freference-trace -Dtarget=i386-windows-gnu
         
       - name: Build & Tests (x86_64)
@@ -48,4 +70,5 @@ jobs:
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
             cd /C/_
+            zig build -DSDL2
             zig build print_version -freference-trace -Dtarget=x86_64-windows-gnu
