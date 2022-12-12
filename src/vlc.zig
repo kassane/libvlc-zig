@@ -18,9 +18,8 @@ pub usingnamespace c;
 
 // Native OS - C API
 pub usingnamespace switch (@import("builtin").os.tag) {
-    .linux => @cImport(@cInclude("unistd.h")),
+    .macos, .linux => @cImport(@cInclude("unistd.h")),
     .windows => @cImport(@cInclude("windows.h")),
-    // .ios, .macos, .watchos, .tvos => TODO (Darwin),
     else => @compileError("Unsupported operational system!"),
 };
 
@@ -117,13 +116,13 @@ pub fn media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*Media_t {
 pub fn media_new_fd(p_instance: ?*Instance_t, fd: c_int) ?*Media_t {
     return c.libvlc_media_new_fd(p_instance, fd);
 }
-pub fn media_new_callbacks(p_instance: ?*Instance_t, open: mediaOpen_callback, read: mediaRead_callback, seek: mediaSeek_callback, close: mediaClose_callback, ptr: ?*anyopaque) ?*Media_t{
+pub fn media_new_callbacks(p_instance: ?*Instance_t, open: mediaOpen_callback, read: mediaRead_callback, seek: mediaSeek_callback, close: mediaClose_callback, ptr: ?*anyopaque) ?*Media_t {
     return c.libvlc_media_new_callbacks(p_instance, open, read, seek, close, ptr);
 }
-pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Media_t{
+pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Media_t {
     return c.libvlc_media_new_as_node(p_instance, @ptrCast([*c]const u8, psz_name));
 }
-pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void{
+pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void {
     c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
 }
 

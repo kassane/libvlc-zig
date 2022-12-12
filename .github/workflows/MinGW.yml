@@ -29,7 +29,7 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           path-type: inherit
-          install: git unzip mingw-w64-${{ matrix.arch }}-pkg-config mingw-w64-${{ matrix.arch }}-sdl2 mingw-w64-${{ matrix.arch }}-vlc
+          install: git unzip mingw-w64-${{ matrix.arch }}-pkg-config mingw-w64-${{ matrix.arch }}-SDL2 mingw-w64-${{ matrix.arch }}-vlc
           update: true
       
       - name: Move Checkout
