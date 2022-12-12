@@ -21,6 +21,6 @@ jobs:
         with:
           version: 0.10.0
           
-      - name: Build & Run
-        run: |
-            zig build print_version -freference-trace
+      # - name: Build & Run
+      #   run: |
+      #       zig build print_version -freference-trace

@@ -17,11 +17,12 @@ const c = @cImport({
 pub usingnamespace c;
 
 // Native OS - C API
-pub usingnamespace switch (@import("builtin").os.tag) {
-    .macos, .linux => @cImport(@cInclude("unistd.h")),
-    .windows => @cImport(@cInclude("windows.h")),
-    else => @compileError("Unsupported operational system!"),
-};
+// const builtin = @import("builtin");
+// const nativeC = switch (builtin.os.tag) {
+//     .macos, .linux => @cImport(@cInclude("unistd.h")),
+//     .windows => @cImport(@cInclude("windows.h")),
+//     else => @compileError("Unsupported operational system!"),
+// };
 
 pub const Callback_t = c.libvlc_callback_t;
 pub const Instance_t = c.libvlc_instance_t;
@@ -44,6 +45,10 @@ pub const log_level = enum(c_int) {
     LIBVLC_ERROR = 4,
 };
 
+pub fn sleep(time: usize) void {
+    const std = @import("std");
+    std.os.nanosleep(time, time * std.time.ns_per_ms);
+}
 pub fn getError() [*:0]const u8 {
     return c.libvlc_errmsg();
 }

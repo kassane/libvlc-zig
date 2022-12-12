@@ -63,7 +63,7 @@ pub fn main() !void {
         // play the media_player
         if (vlc.libvlc_media_player_play(mp) < 0) @panic("Cannot be played!");
 
-        _ = vlc.sleep(40);
+        vlc.sleep(40);
 
         // stop playing
         vlc.libvlc_media_player_stop(mp);

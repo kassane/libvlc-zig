@@ -43,7 +43,7 @@ jobs:
             cd /C/_
             zig build print_version -freference-trace -Dtarget=i386-windows-gnu
         
-      - name: Build & Tests (x86_x64)
+      - name: Build & Tests (x86_64)
         shell: msys2 {0}
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
