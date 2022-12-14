@@ -108,6 +108,7 @@ pub fn set_user_agent(p_instance: ?*Instance_t, name: [*:0]const u8, http: [*:0]
 pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]const u8, icon: [*:0]const u8) void {
     c.libvlc_set_app_id(p_instance, id, version, icon);
 }
+
 // Media functions
 pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
     return c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl));

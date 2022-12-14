@@ -43,13 +43,14 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     }
 
     if (target.isDarwin()) {
-        // example.addIncludePath("/Applications/VLC.app/Contents/MacOS/include");
+        example.addIncludePath("/Applications/VLC.app/Contents/MacOS/include");
         example.linkSystemLibrary("vlc");
     } else if (target.isWindows()) {
         example.linkSystemLibraryName("vlc.dll");
     } else {
         example.linkSystemLibrary("vlc");
     }
+    
     example.linkLibC();
     example.install();
 
