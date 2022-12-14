@@ -23,7 +23,7 @@ jobs:
             source vendor/ci/macport-ci install && \
             sudo port install VLC && port contents VLC && \
             sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/VLC/include/vlc /usr/local/include/ && \
-            sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/VLC/lib/* /usr/local/lib/
+            sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/lib/* /usr/local/lib/
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2
