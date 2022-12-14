@@ -1,6 +1,12 @@
 name: MacOS
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '**.zig'
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -10,17 +16,20 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-
-      - name: Install
+      
+      - name: Install deps
         run: |
             brew install sdl2 && \
-            brew install --cask vlc
+            source vendor/ci/macport-ci install && \
+            sudo port install VLC && port contents VLC && \
+            sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/include/vlc /usr/local/include/ && \
+            sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/lib/* /usr/local/lib/
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: 0.10.0
           
-      # - name: Build & Run
-      #   run: |
-      #       zig build print_version -freference-trace
+      - name: Build & Run
+        run: |
+            zig build run -freference-trace

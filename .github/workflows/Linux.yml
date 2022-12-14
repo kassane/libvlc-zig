@@ -1,6 +1,12 @@
 name: Linux
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '**.zig'
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,15 +33,4 @@ jobs:
 
       - name: run print_version (example)
         run: |
-            zig build print_version -freference-trace
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.10.0
-      - run: |
-            rm -rf zig-cache
-            zig fmt --check --ast-check **.zig
+            zig build run -freference-trace
