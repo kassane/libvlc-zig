@@ -9,20 +9,16 @@
 //!    this list of conditions and the following disclaimer in the documentation
 //!    and/or other materials provided with the distribution.
 
+const builtin = @import("builtin");
 // VLC - C API
-const c = @cImport({
-    @cInclude("vlc/vlc.h");
-    @cDefine("struct_a", ""); // fixme: translate-c error fixed (missing opaque struct)
-});
-pub usingnamespace c;
-
-// Native OS - C API
-// const builtin = @import("builtin");
-// const nativeC = switch (builtin.os.tag) {
-//     .macos, .linux => @cImport(@cInclude("unistd.h")),
-//     .windows => @cImport(@cInclude("windows.h")),
-//     else => @compileError("Unsupported operational system!"),
-// };
+const c = switch (builtin.os.tag) {
+    .linux => @cImport({
+        @cInclude("vlc/vlc.h");
+        // fixme: translate-c error fixed (missing opaque struct)
+        @cDefine("struct_a", "");
+    }),
+    else => @import("libvlc.zig"),
+};
 
 pub const Callback_t = c.libvlc_callback_t;
 pub const Instance_t = c.libvlc_instance_t;
@@ -112,6 +108,8 @@ pub fn set_user_agent(p_instance: ?*Instance_t, name: [*:0]const u8, http: [*:0]
 pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]const u8, icon: [*:0]const u8) void {
     c.libvlc_set_app_id(p_instance, id, version, icon);
 }
+
+// Media functions
 pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
     return c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl));
 }
@@ -129,6 +127,31 @@ pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Me
 }
 pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void {
     c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
+}
+pub fn media_release(p_md: ?*Media_t) void {
+    c.libvlc_media_release(p_md);
+}
+// Media Player functions
+pub fn media_player_new(p_libvlc_instance: ?*Instance_t) ?*Media_player_t {
+    return c.libvlc_media_player_new(p_libvlc_instance);
+}
+pub fn media_player_new_from_media(p_md: ?*Media_t) ?*Media_player_t {
+    return c.libvlc_media_player_new_from_media(p_md);
+}
+pub fn media_player_is_playing(p_mi: ?*Media_player_t) c_int {
+    return c.libvlc_media_player_is_playing(p_mi);
+}
+pub fn media_player_pause(p_mi: ?*Media_player_t) void {
+    c.libvlc_media_player_pause(p_mi);
+}
+pub fn media_player_play(p_mi: ?*Media_player_t) c_int {
+    return c.libvlc_media_player_play(p_mi);
+}
+pub fn media_player_stop(p_mi: ?*Media_player_t) void {
+    c.libvlc_media_player_stop(p_mi);
+}
+pub fn media_player_release(p_mi: ?*Media_player_t) void {
+    c.libvlc_media_player_release(p_mi);
 }
 
 pub const libvlc_media_slave_t = extern struct {

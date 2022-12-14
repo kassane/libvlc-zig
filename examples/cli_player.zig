@@ -55,21 +55,21 @@ pub fn main() !void {
         }
 
         // create a media play playing environment
-        mp = vlc.libvlc_media_player_new_from_media(m);
+        mp = vlc.media_player_new_from_media(m);
 
         // no need to keep the media now
-        defer vlc.libvlc_media_release(m);
+        defer vlc.media_release(m);
 
         // play the media_player
-        if (vlc.libvlc_media_player_play(mp) < 0) @panic("Cannot be played!");
+        if (vlc.media_player_play(mp) < 0) @panic("Cannot be played!");
 
         vlc.sleep(40);
 
         // stop playing
-        vlc.libvlc_media_player_stop(mp);
+        vlc.media_player_stop(mp);
 
         // free the media_player
-        defer vlc.libvlc_media_player_release(mp);
+        defer vlc.media_player_release(mp);
 
         defer vlc.release(inst);
         break;
@@ -81,9 +81,9 @@ fn usage() !void {
         \\cli-player [options]
         \\
         \\Options:
-        \\  -i, --input: Open local multimedia [*formats(mp4, mp3, webm, avi, rmvb, ...)],
-        \\  -u, --url:   Open online multimedia [*hosts(file:///, rtsp://, http://, ftp://, https://,...)],
-        \\  -h, --help:  This message,
-        \\
-    , .{});
+        \\  -i, --input: Open local multimedia [*formats(mp4,mp3,webm,avi,rmvb)]
+        \\  -u, --url:   Open online multimedia [*formats(mp4,mp3,webm,avi,rmvb)]
+        \\  -h, --help:  This message
+        \\{s}
+    , .{"\n\r"});
 }

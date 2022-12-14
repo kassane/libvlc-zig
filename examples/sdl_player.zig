@@ -79,8 +79,8 @@ fn usage() !void {
         \\  -i, --input: Open local multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
         \\  -u, --url:   Open online multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
         \\  -h, --help:  This message,
-        \\
-    , .{});
+        \\{s}
+    , .{"\n\r"});
 }
 
 fn SDL_window(ctx: ?*vlc.Instance_t, file: ?*vlc.Media_t) void {
