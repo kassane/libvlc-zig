@@ -10,7 +10,7 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
-    var op = Options{ .sdl_enabled = false };
+    var op = Options{ .sdl_enabled = true };
 
     const examples = b.option([]const u8, "Example", "Build example: [print-version, cli-player, sdl2-player]") orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
@@ -32,7 +32,6 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     example.setBuildMode(mode);
     example.setTarget(target);
     example.addPackagePath("vlc", "src/vlc.zig");
-
     if (option.sdl_enabled) {
         // import SDL bindings
         const sdl = @import("vendor/SDL2-zig/Sdk.zig");
@@ -43,14 +42,22 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     }
 
     if (target.isDarwin()) {
-        example.addIncludePath("/Applications/VLC.app/Contents/MacOS/include");
+        // Custom path
+        example.addIncludePath("/usr/local/include");
+        example.addLibraryPath("/usr/local/lib");
+        // Link Frameworks
+        example.linkFramework("Foundation");
+        example.linkFramework("Cocoa");
+        example.linkFramework("IOKit");
+        // example.linkFramework("Sparkle");
+        // Link library
         example.linkSystemLibrary("vlc");
     } else if (target.isWindows()) {
-        example.linkSystemLibraryName("vlc.dll");
+        example.linkSystemLibraryName("vlc");
     } else {
         example.linkSystemLibrary("vlc");
     }
-    
+
     example.linkLibC();
     example.install();
 

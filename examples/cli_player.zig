@@ -55,10 +55,10 @@ pub fn main() !void {
         }
 
         // create a media play playing environment
-        mp = vlc.media_player_new_from_media(m);
+        mp = vlc.media_player_new_from_media(inst, m);
 
         // no need to keep the media now
-        defer vlc.media_release(m);
+        defer vlc.media_release(inst, m);
 
         // play the media_player
         if (vlc.media_player_play(mp) < 0) @panic("Cannot be played!");
@@ -66,7 +66,7 @@ pub fn main() !void {
         vlc.sleep(40);
 
         // stop playing
-        vlc.media_player_stop(mp);
+        vlc.media_player_stop(inst, mp);
 
         // free the media_player
         defer vlc.media_player_release(mp);
