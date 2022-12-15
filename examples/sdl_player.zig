@@ -1,205 +1,205 @@
+//! This example need VLC v4+
+
 const std = @import("std");
 const vlc = @import("vlc");
 const SDL = @import("sdl2");
-const stdout = std.io.getStdOut().writer();
-const strcmp = std.mem.eql;
+const log = vlc.vlc_log;
 
-// SCREEN SIZE
-const SCREEN = struct {
-    const height: c_int = 600;
-    const width: c_int = 800;
-    const videoheight: usize = 480;
-    const videowidth: usize = 640;
+// Shader sources
+// const vertexSource = [_][]const u8{
+//     "attribute vec4 a_position;    \n",
+//     "attribute vec2 a_uv;          \n",
+//     "varying vec2 v_TexCoordinate; \n",
+//     "void main()                   \n",
+//     "{                             \n",
+//     "    v_TexCoordinate = a_uv;   \n",
+//     "    gl_Position = vec4(a_position.xyz, 1.0);  \n",
+//     "}                             \n",
+// };
+
+// const fragmentSource = [_][]const u8{
+//     "uniform sampler2D u_videotex; \n",
+//     "varying vec2 v_TexCoordinate; \n",
+//     "void main()                   \n",
+//     "{                             \n",
+//     "    gl_FragColor = texture2D(u_videotex, v_TexCoordinate); \n",
+//     "}                             \n",
+// };
+
+// Shader sources
+const vertexSource: [*:0]const u8 =
+    \\attribute vec4 a_position;    \n
+    \\attribute vec2 a_uv;          \n
+    \\varying vec2 v_TexCoordinate; \n
+    \\void main()                   \n
+    \\{                             \n
+    \\    v_TexCoordinate = a_uv;   \n
+    \\    gl_Position = vec4(a_position.xyz, 1.0);  \n
+    \\}                             \n
+;
+
+const fragmentSource: [*:0]const u8 =
+    \\uniform sampler2D u_videotex; \n
+    \\varying vec2 v_TexCoordinate; \n
+    \\void main()                   \n
+    \\{                             \n
+    \\    gl_FragColor = texture2D(u_videotex, v_TexCoordinate); \n
+    \\}                             \n
+;
+
+const VLCVideo = struct {
+    // Fields
+
+    //VLC objects
+    m_vlc: ?*vlc.Instance_t,
+    m_mp: ?*vlc.Media_player_t,
+    m_media: ?*vlc.Media_player_t,
+    m_text_lock: std.Thread.Mutex,
+
+    //SDL context
+    m_win: ?*SDL.SDL_Window,
+    m_ctx: SDL.SDL_GLContext,
+
+    fn init(self: *Self, window: ?*SDL.SDL_Window) void {
+        self.m_win = window;
+        const args = [_][*c]const u8{
+            "--verbose=4",
+        };
+
+        self.m_vlc = vlc.new(std.mem.len(args), &args);
+
+        //VLC opengl context needs to be shared with SDL context
+        _ = SDL.SDL_GL_SetAttribute(SDL.SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+        self.m_ctx = SDL.SDL_GL_CreateContext(window);
+    }
+    fn deinit(self: *Self) void {
+        self.stop();
+        if (self.m_vlc)
+            vlc.release(self.m_vlc);
+    }
+
+    fn playMedia(self: *Self, url: [*:0]const u8) bool {
+        self.m_media = vlc.media_new_location(self.m_vlc, url);
+        if (self.m_media) |_| {
+            log.err("unable to create media: {s}.\n", .{url});
+            return false;
+        }
+        self.m_mp = vlc.media_player_new_from_media(self.m_vlc, self.m_media);
+        if (self.m_mp) |_| {
+            log.err("unable to create media player.\n", .{});
+            vlc.media_release(self.m_media);
+            return false;
+        }
+        // Define the opengl rendering callbacks
+        //vlc.video_set_output_callbacks(self.m_mp, vlc.video_engine_opengl, setup, cleanup, nullptr, resize, swap, make_current, get_proc_address, nullptr, nullptr, this);
+
+        // Play the video
+        log.info("play media: {s}.\n", .{url});
+        vlc.media_player_play(self.m_mp);
+        return true;
+    }
+
+    fn stop(self: *Self) void {
+        if (self.m_mp) {
+            vlc.media_player_release(self.m_mp);
+            self.m_mp = null;
+        }
+        if (self.m_media) {
+            vlc.media_release(self.m_vlc, self.m_media);
+            self.m_media = null;
+        }
+    }
+
+    fn getVideoFrame(self: *Self, out_updated: *bool) usize {
+        self.m_text_lock.lock();
+        defer self.m_text_lock.unlock();
+
+        if (out_updated)
+            out_updated.* = m_updated;
+        if (m_updated) {
+            std.mem.swap(usize, m_idx_swap, m_idx_display);
+            m_updated = false;
+        }
+        return self.m_tex[m_idx_display];
+    }
+
+    //fn resize(self: *Self, data: ?*anyopaque, cfg: ?*vlc.video_render_cfg_t, render_cfg: ?*vlc.video_output_cfg_t) bool {
+    // VLCVideo* that = static_cast<VLCVideo*>(data);
+    // if (cfg->width != that->m_width || cfg->height != that->m_height)
+    //     cleanup(data);
+
+    // glGenTextures(3, that->m_tex);
+    // glGenFramebuffers(3, that->m_fbo);
+
+    // for (int i = 0; i < 3; i++) {
+    //     glBindTexture(GL_TEXTURE_2D, that->m_tex[i]);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cfg->width, cfg->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //     glBindFramebuffer(GL_FRAMEBUFFER, that->m_fbo[i]);
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, that->m_tex[i], 0);
+    // }
+    // glBindTexture(GL_TEXTURE_2D, 0);
+
+    // GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+    // if (status != GL_FRAMEBUFFER_COMPLETE) {
+    //     return false;
+    // }
+
+    // that->m_width = cfg->width;
+    // that->m_height = cfg->height;
+
+    // glBindFramebuffer(GL_FRAMEBUFFER, that->m_fbo[that->m_idx_render]);
+
+    // render_cfg->opengl_format = GL_RGBA;
+    // render_cfg->full_range = true;
+    // render_cfg->colorspace = libvlc_video_colorspace_BT709;
+    // render_cfg->primaries  = libvlc_video_primaries_BT709;
+    // render_cfg->transfer   = libvlc_video_transfer_func_SRGB;
+    // render_cfg->orientation = libvlc_video_orient_top_left;
+
+    //      return true;
+    //   }
+
+    // This callback is called during initialisation.
+    // fn setup(void** data, const libvlc_video_setup_device_cfg_t *cfg,
+    //                   libvlc_video_setup_device_info_t *out) bool
+    // {
+    //     VLCVideo* that = static_cast<VLCVideo*>(*data);
+    //     that->m_width = 0;
+    //     that->m_height = 0;
+    //     return true;
+    // }
+
+    // This callback is called to release the texture and FBO created in resize
+    // fn cleanup(void* data) void
+    // {
+    //     VLCVideo* that = static_cast<VLCVideo*>(data);
+    //     if (that->m_width == 0 && that->m_height == 0)
+    //         return;
+
+    //     glDeleteTextures(3, that->m_tex);
+    //     glDeleteFramebuffers(3, that->m_fbo);
+    // }
+
+    // Decalrations
+    const Self = @This();
+
+    const m_width = 0;
+    const m_height = 0;
+    const m_tex: [3]usize = std.mem.zeroes([3]usize);
+    const m_fbo: [3]usize = std.mem.zeroes([3]usize);
+    const m_idx_render = 0;
+    const m_idx_swap = 1;
+    const m_idx_display = 2;
+    var m_updated = false;
 };
 
-const Context = extern struct {
-    renderer: ?*SDL.SDL_Renderer,
-    surface: ?*SDL.SDL_Surface,
-    mutex: ?*SDL.SDL_mutex,
-    texture: ?*SDL.SDL_Texture,
-    n: c_int,
-};
-
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const args = try std.process.argsAlloc(gpa.allocator());
-    defer std.process.argsFree(gpa.allocator(), args);
-
-    const vlc_args = [_][*c]const u8{
-        // Debug
-        "--verbose=2",
-        //"--no-audio", // Don't play audio.
-        "--no-xlib", // Don't use Xlib.
-
-        // Apply a video filter.
-        //"--video-filter", "sepia",
-        //"--sepia-intensity=200"
-    };
-
-    var argc: usize = 0;
-    while (argc < args.len) {
-        argc += 1;
-        // Help message
-        if (args.len <= 1 or strcmp(u8, args[argc], "-h") or strcmp(u8, args[argc], "--help")) {
-            usage() catch @panic("Cannot be print help!");
-            return;
-        }
-        // load the vlc engine
-        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &vlc_args);
-
-        // create a new item
-        if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
-            if (args.len < 3) {
-                stdout.print("Missing file to exec [argc:{}]!\n", .{args.len}) catch @panic("Cannot print");
-                break;
-            } else {
-                argc += 1;
-                SDL_window(inst, vlc.libvlc_media_new_path(inst, @ptrCast([*c]const u8, args[argc].ptr)));
-            }
-        }
-        if (strcmp(u8, args[argc], "--url") or strcmp(u8, args[argc], "-u")) {
-            if (args.len < 3) {
-                stdout.print("Missing URL file to exec [argc: {}]!\n", .{args.len}) catch @panic("Cannot print");
-                break;
-            } else {
-                argc += 1;
-                SDL_window(inst, vlc.libvlc_media_new_location(inst, @ptrCast([*c]const u8, args[argc].ptr)));
-            }
-        }
-        break;
-    }
-}
-
-fn usage() !void {
-    try stdout.print(
-        \\sdl-player [options]
-        \\
-        \\Options:
-        \\  -i, --input: Open local multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
-        \\  -u, --url:   Open online multimedia [*formats(mp4,mp3,webm,avi,rmvb)],
-        \\  -h, --help:  This message,
-        \\{s}
-    , .{"\n\r"});
-}
-
-fn SDL_window(ctx: ?*vlc.Instance_t, file: ?*vlc.Media_t) void {
-    if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
-        sdlPanic();
-    defer SDL.SDL_Quit();
-
-    var window = SDL.SDL_CreateWindow(
-        "Zig - VLC Player",
-        SDL.SDL_WINDOWPOS_CENTERED,
-        SDL.SDL_WINDOWPOS_CENTERED,
-        SCREEN.width,
-        SCREEN.height,
-        SDL.SDL_WINDOW_SHOWN,
-    ) orelse sdlPanic();
-
-    defer _ = SDL.SDL_DestroyWindow(window);
-    defer vlc.release(ctx);
-
-    var context: Context = undefined;
-
-    context.renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
-    context.texture = SDL.SDL_CreateTexture(context.renderer, SDL.SDL_PIXELFORMAT_BGR565, SDL.SDL_TEXTUREACCESS_STREAMING, SCREEN.videowidth, SCREEN.videoheight);
-
-    context.mutex = SDL.SDL_CreateMutex();
-
-    // create a media play playing environment
-    var mp: ?*vlc.Media_player_t = vlc.libvlc_media_player_new_from_media(file);
-
-    // no need to keep the media now
-    defer vlc.libvlc_media_release(file);
-
-    vlc.libvlc_video_set_callbacks(mp, lock, unlock, display, &context);
-    vlc.libvlc_video_set_format(mp, "RV16", SCREEN.videowidth, SCREEN.videoheight, SCREEN.videowidth * @as(c_int, 2));
-
-    // play the media_player
-    if (vlc.libvlc_media_player_play(mp) < 0) @panic("Cannot be played!");
-
-    mainLoop: while (true) {
-        var ev: SDL.SDL_Event = undefined;
-        while (SDL.SDL_PollEvent(&ev) != 0) {
-            if (ev.type == SDL.SDL_QUIT)
-                break :mainLoop;
-        }
-        var rect: SDL.SDL_Rect = undefined;
-        rect.w = SCREEN.videowidth;
-        rect.h = SCREEN.videoheight;
-        // rect.x = ((1 + 5 * std.math.sin(@as(i32,delay) * 1)) * (SCREEN.width - SCREEN.videoheight) / 2);
-        // rect.y = ((1 + 5 * std.math.cos(@as(i32,delay) * 1)) * (SCREEN.height - SCREEN.videowidth) / 2);
-
-        rect.x = @floatToInt(c_int, ((1.0 + (0.5 * std.math.sin(0.03 * @intToFloat(f64, context.n)))) * @intToFloat(f64, @as(c_int, SCREEN.height) - @as(c_int, SCREEN.videoheight))) / @intToFloat(f64, @as(c_int, 2)));
-        rect.y = @floatToInt(c_int, ((1.0 + (0.5 * std.math.cos(0.03 * @intToFloat(f64, context.n)))) * @intToFloat(f64, @as(c_int, SCREEN.width) - @as(c_int, SCREEN.videowidth))) / @intToFloat(f64, @as(c_int, 2)));
-
-        _ = SDL.SDL_SetRenderDrawColor(context.renderer, 0, 80, 0, 255);
-        _ = SDL.SDL_RenderClear(context.renderer);
-        _ = SDL.SDL_RenderCopy(context.renderer, SDL.SDL_CreateTextureFromSurface(context.renderer, context.surface), null, &rect);
-        SDL.SDL_RenderPresent(context.renderer);
-        _ = SDL.SDL_UnlockMutex(context.mutex);
-
-        _ = SDL.SDL_Delay(10);
-    }
-
-    _ = vlc.sleep(40);
-
-    // stop playing
-    vlc.libvlc_media_player_stop(mp);
-
-    // free the media_player
-    defer vlc.libvlc_media_player_release(mp);
-
-    // Close window and clean up libSDL.
-    _ = SDL.SDL_DestroyMutex(context.mutex);
-    _ = SDL.SDL_DestroyRenderer(context.renderer);
-}
-
-fn sdlPanic() noreturn {
-    const str = @as(?[*:0]const u8, SDL.SDL_GetError()) orelse "unknown error";
-    @panic(std.mem.sliceTo(str, 0));
-}
-
-// VLC prepares to render a video frame.
-fn lock(data: ?*anyopaque, p_pixels: [*c]?*anyopaque) callconv(.C) ?*anyopaque {
-    const c: ?*Context = @ptrCast(*Context, @alignCast(std.meta.alignment(*Context), data));
-
-    var pitch: c_int = 0;
-    _ = SDL.SDL_LockMutex(c.?.mutex);
-    _ = SDL.SDL_LockTexture(c.?.texture, null, p_pixels, &pitch);
-
-    return null; // Picture identifier, not needed here.
-}
-
-// VLC just rendered a video frame.
-fn unlock(data: ?*anyopaque, id: ?*anyopaque, p_pixels: [*c]const ?*anyopaque) callconv(.C) void {
-    _ = id;
-    const c: ?*Context = @ptrCast(*Context, @alignCast(std.meta.alignment(*Context), data));
-
-    const pixels: [*c]u16 = @ptrCast([*c]u16, @alignCast(std.meta.alignment([*c]u16), p_pixels.*));
-
-    // We can also render stuff.
-    var x: usize = 10;
-    var y: usize = 10;
-    while (y < 40) : (y += 1) {
-        while (x < 40) : (x += 1) {
-            if (x < 13 or y < 13 or x > 36 or y > 36) {
-                pixels[y * SCREEN.videowidth + x] = 0xffff;
-            } else {
-                // RV16 = 5+6+5 pixels per color, BGR.
-                pixels[y * SCREEN.videoheight + x] = 0x02ff;
-            }
-        }
-    }
-
-    _ = SDL.SDL_UnlockTexture(c.?.texture);
-    _ = SDL.SDL_UnlockMutex(c.?.mutex);
-}
-
-// VLC wants to display a video frame.
-fn display(data: ?*anyopaque, id: ?*anyopaque) callconv(.C) void {
-    _ = id;
-    const c: ?*Context = @ptrCast(*Context, @alignCast(std.meta.alignment(*Context), data));
-    _ = c;
+pub fn main() void {
+    _ = vertexSource;
+    _ = fragmentSource;
 }
