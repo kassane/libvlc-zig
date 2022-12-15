@@ -43,6 +43,8 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     }
 
     if (target.isDarwin()) {
+        example.addIncludePath("/usr/local/include");
+        example.addLibraryPath("/usr/local/library");
         example.linkFramework("Foundation");
         example.linkFramework("Cocoa");
         example.linkFramework("IOKit");
