@@ -10,7 +10,7 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
-    var op = Options{ .sdl_enabled = true };
+    var op = Options{ .sdl_enabled = false };
 
     const examples = b.option([]const u8, "Example", "Build example: [print-version, cli-player, sdl2-player]") orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
