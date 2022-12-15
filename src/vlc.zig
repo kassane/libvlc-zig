@@ -25,19 +25,25 @@ pub const Event_Type_t = c.libvlc_event_type_t;
 pub const Event_Manage_t = c.libvlc_event_manager_t;
 pub const Time_t = c.libvlc_time_t;
 pub const Log_t = c.libvlc_log_t;
+pub const MediaSlave_t = c.libvlc_media_slave_t;
 pub const Media_t = c.libvlc_media_t;
 pub const Media_player_t = c.libvlc_media_player_t;
 pub const mediaOpen_callback = c.libvlc_media_open_cb;
 pub const mediaSeek_callback = c.libvlc_media_seek_cb;
 pub const mediaClose_callback = c.libvlc_media_close_cb;
 pub const mediaRead_callback = c.libvlc_media_read_cb;
+pub const VideoOutputCfg_t = c.libvlc_video_output_cfg_t;
+pub const VideoRenderCfg_t = c.libvlc_video_render_cfg_t;
+pub const VdeoSetupDeviceCfg_t = c.libvlc_video_setup_device_cfg_t;
+pub const VideoSetupDeviceInfo_t = c.libvlc_video_setup_device_info_t;
 
-pub const log_level = enum(c_int) {
-    LIBVLC_DEBUG = 0,
-    LIBVLC_NOTICE = 2,
-    LIBVLC_WARNING = 3,
-    LIBVLC_ERROR = 4,
+pub const VideoColorSpace_t = enum(c_int) {
+    BT601 = c.libvlc_video_colorspace_BT601,
+    BT709 = c.libvlc_video_colorspace_BT709,
+    BT2020 = c.libvlc_video_colorspace_BT2020,
 };
+
+const vlc_log = std.log.scoped(.vlc);
 
 pub fn sleep(time: usize) void {
     std.os.nanosleep(time, time * std.time.ns_per_ms);
@@ -166,99 +172,61 @@ pub fn media_player_release(p_mi: ?*Media_player_t) void {
     c.libvlc_media_player_release(p_mi);
 }
 
-pub const libvlc_media_slave_t = extern struct {
-    psz_uri: [*c]u8,
-    i_type: libvlc_media_slave_type_t,
-    i_priority: c_uint,
+// Enums
+pub const MediaParsedStatus_t = enum(c_uint) {
+    mediaParsedStatusSkipped = c.libvlc_media_parsed_status_skipped,
+    mediaParsedStatusFailed = c.libvlc_media_parsed_status_failed,
+    mediaParsedStatusTimeout = c.libvlc_media_parsed_status_timeout,
+    mediaParsedStatusDone = c.libvlc_media_parsed_status_done,
 };
-pub const libvlc_media_parsed_status_t = enum(c_uint) {
-    libvlc_media_parsed_status_skipped = 1,
-    libvlc_media_parsed_status_failed,
-    libvlc_media_parsed_status_timeout,
-    libvlc_media_parsed_status_done,
+pub const MediaSlaveType = enum(c_uint) {
+    mediaSlaveTypeSubtitle = c.libvlc_media_slave_type_subtitle,
+    mediaSlaveTypeAudio = c.libvlc_media_slave_type_audio,
 };
-pub const libvlc_media_slave_type_t = enum(c_uint) {
-    libvlc_media_slave_type_subtitle,
-    libvlc_media_slave_type_audio,
-};
-pub const libvlc_state_t = enum(c_int) {
-    libvlc_NothingSpecial = 0,
-    libvlc_Opening,
-    libvlc_Buffering,
-    libvlc_Playing,
-    libvlc_Paused,
-    libvlc_Stopped,
-    libvlc_Ended,
-    libvlc_Error,
+pub const State_t = enum(c_int) {
+    NothingSpecial = c.libvlc_NothingSpecial,
+    Opening = c.libvlc_Opening,
+    Buffering = c.libvlc_Buffering,
+    Playing = c.libvlc_Playing,
+    Paused = c.libvlc_Paused,
+    Stopped = c.libvlc_Stopped,
+    Ended = c.libvlc_Ended,
+    Error = c.libvlc_Error,
 };
 
-pub const libvlc_track_type_t = opaque {};
-pub const libvlc_media_type_t = opaque {};
-pub const libvlc_renderer_item_t = opaque {};
-pub const libvlc_media_parse_flag_t = enum(c_uint) {
-    libvlc_media_parse_local = 0x00,
-    libvlc_media_parse_network = 0x01,
-    libvlc_media_fetch_local = 0x02,
-    libvlc_media_fetch_network = 0x04,
-    libvlc_media_do_interact = 0x08,
+pub const MediaParseFlag_t = enum(c_uint) {
+    mediaParseLocal = c.libvlc_media_parse_local,
+    mediaParseNetwork = c.libvlc_media_parse_network,
+    mediaFetchLocal = c.libvlc_media_fetch_local,
+    mediaFetchNetwork = c.libvlc_media_fetch_network,
+    mediaDoInteract = c.libvlc_media_do_interact,
 };
 
-pub const libvlc_media_track_t = opaque {};
-// pub const libvlc_media_track_t = extern struct {
-//     i_codec: u32,
-//     i_original_fourcc: u32,
-//     i_id: c_int,
-//     i_type: libvlc_track_type_t,
-//     i_profile: c_int,
-//     i_level: c_int,
-//     unnamed_0: union_unnamed_37,
-//     i_bitrate: c_uint,
-//     psz_language: [*c]u8,
-//     psz_description: [*c]u8,
-// };
-pub const libvlc_time_t = i64;
-pub const libvlc_media_stats_t = extern struct {
-    i_read_bytes: c_int,
-    f_input_bitrate: f32,
-    i_demux_read_bytes: c_int,
-    f_demux_bitrate: f32,
-    i_demux_corrupted: c_int,
-    i_demux_discontinuity: c_int,
-    i_decoded_video: c_int,
-    i_decoded_audio: c_int,
-    i_displayed_pictures: c_int,
-    i_lost_pictures: c_int,
-    i_played_abuffers: c_int,
-    i_lost_abuffers: c_int,
-    i_sent_packets: c_int,
-    i_sent_bytes: c_int,
-    f_send_bitrate: f32,
-};
-pub const libvlc_meta_t = enum(c_uint) {
-    libvlc_meta_Title,
-    libvlc_meta_Artist,
-    libvlc_meta_Genre,
-    libvlc_meta_Copyright,
-    libvlc_meta_Album,
-    libvlc_meta_TrackNumber,
-    libvlc_meta_Description,
-    libvlc_meta_Rating,
-    libvlc_meta_Date,
-    libvlc_meta_Setting,
-    libvlc_meta_URL,
-    libvlc_meta_Language,
-    libvlc_meta_NowPlaying,
-    libvlc_meta_Publisher,
-    libvlc_meta_EncodedBy,
-    libvlc_meta_ArtworkURL,
-    libvlc_meta_TrackID,
-    libvlc_meta_TrackTotal,
-    libvlc_meta_Director,
-    libvlc_meta_Season,
-    libvlc_meta_Episode,
-    libvlc_meta_ShowName,
-    libvlc_meta_Actors,
-    libvlc_meta_AlbumArtist,
-    libvlc_meta_DiscNumber,
-    libvlc_meta_DiscTotal,
+pub const Meta_t = enum(c_uint) {
+    meta_Title = c.libvlc_meta_Title,
+    meta_Artist = c.libvlc_meta_Artist,
+    meta_Genre = c.libvlc_meta_Genre,
+    meta_Copyright = c.libvlc_meta_Copyright,
+    meta_Album = c.libvlc_meta_Album,
+    meta_TrackNumber = c.libvlc_meta_TrackNumber,
+    meta_Description = c.libvlc_meta_Description,
+    meta_Rating = c.libvlc_meta_Rating,
+    meta_Date = c.libvlc_meta_Date,
+    meta_Setting = c.libvlc_meta_Setting,
+    meta_URL = c.libvlc_meta_URL,
+    meta_Language = c.libvlc_meta_Language,
+    meta_NowPlaying = c.libvlc_meta_NowPlaying,
+    meta_Publisher = c.libvlc_meta_Publisher,
+    meta_EncodedBy = c.libvlc_meta_EncodedBy,
+    meta_ArtworkURL = c.libvlc_meta_ArtworkURL,
+    meta_TrackID = c.libvlc_meta_TrackID,
+    meta_TrackTotal = c.libvlc_meta_TrackTotal,
+    meta_Director = c.libvlc_meta_Director,
+    meta_Season = c.libvlc_meta_Season,
+    meta_Episode = c.libvlc_meta_Episode,
+    meta_ShowName = c.libvlc_meta_ShowName,
+    meta_Actors = c.libvlc_meta_Actors,
+    meta_AlbumArtist = c.libvlc_meta_AlbumArtist,
+    meta_DiscNumber = c.libvlc_meta_DiscNumber,
+    meta_DiscTotal = c.libvlc_meta_DiscTotal,
 };
