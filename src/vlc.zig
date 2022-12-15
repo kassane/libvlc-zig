@@ -9,16 +9,14 @@
 //!    this list of conditions and the following disclaimer in the documentation
 //!    and/or other materials provided with the distribution.
 
+const std = @import("std");
 const builtin = @import("builtin");
-// VLC - C API
-const c = switch (builtin.os.tag) {
-    .linux => @cImport({
-        @cInclude("vlc/vlc.h");
-        // fixme: translate-c error fixed (missing opaque struct)
-        @cDefine("struct_a", "");
-    }),
-    else => @import("libvlc.zig"),
-};
+
+const c = @cImport({
+    @cInclude("vlc/vlc.h");
+    @cInclude("vlc/libvlc_version.h");
+    @cDefine("struct_a", "");
+});
 
 pub const Callback_t = c.libvlc_callback_t;
 pub const Instance_t = c.libvlc_instance_t;
@@ -42,7 +40,6 @@ pub const log_level = enum(c_int) {
 };
 
 pub fn sleep(time: usize) void {
-    const std = @import("std");
     std.os.nanosleep(time, time * std.time.ns_per_ms);
 }
 pub fn getError() [*:0]const u8 {
@@ -111,10 +108,16 @@ pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]con
 
 // Media functions
 pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
-    return c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl));
+    return switch (c.LIBVLC_VERSION_MAJOR) {
+        4 => c.libvlc_media_new_location(@ptrCast([*c]const u8, psz_mrl)),
+        else => c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl)),
+    };
 }
 pub fn media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*Media_t {
-    return c.libvlc_media_new_path(p_instance, @ptrCast([*c]const u8, path));
+    return switch (c.LIBVLC_VERSION_MAJOR) {
+        4 => c.libvlc_media_new_path(@ptrCast([*c]const u8, path)),
+        else => c.libvlc_media_new_path(p_instance, @ptrCast([*c]const u8, path)),
+    };
 }
 pub fn media_new_fd(p_instance: ?*Instance_t, fd: c_int) ?*Media_t {
     return c.libvlc_media_new_fd(p_instance, fd);
@@ -128,15 +131,21 @@ pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Me
 pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void {
     c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
 }
-pub fn media_release(p_md: ?*Media_t) void {
-    c.libvlc_media_release(p_md);
+pub fn media_release(p_instance: ?*Instance_t, p_md: ?*Media_t) void {
+    _ = switch (c.LIBVLC_VERSION_MAJOR) {
+        4 => c.libvlc_media_release(p_instance, p_md),
+        else => c.libvlc_media_release(p_md),
+    };
 }
 // Media Player functions
-pub fn media_player_new(p_libvlc_instance: ?*Instance_t) ?*Media_player_t {
-    return c.libvlc_media_player_new(p_libvlc_instance);
+pub fn media_player_new(p_instance: ?*Instance_t) ?*Media_player_t {
+    return c.libvlc_media_player_new(p_instance);
 }
-pub fn media_player_new_from_media(p_md: ?*Media_t) ?*Media_player_t {
-    return c.libvlc_media_player_new_from_media(p_md);
+pub fn media_player_new_from_media(p_instance: ?*Instance_t, p_md: ?*Media_t) ?*Media_player_t {
+    return switch (c.LIBVLC_VERSION_MAJOR) {
+        4 => c.libvlc_media_player_new_from_media(p_instance, p_md),
+        else => c.libvlc_media_player_new_from_media(p_md),
+    };
 }
 pub fn media_player_is_playing(p_mi: ?*Media_player_t) c_int {
     return c.libvlc_media_player_is_playing(p_mi);
@@ -147,8 +156,11 @@ pub fn media_player_pause(p_mi: ?*Media_player_t) void {
 pub fn media_player_play(p_mi: ?*Media_player_t) c_int {
     return c.libvlc_media_player_play(p_mi);
 }
-pub fn media_player_stop(p_mi: ?*Media_player_t) void {
-    c.libvlc_media_player_stop(p_mi);
+pub fn media_player_stop(p_instance: ?*Instance_t, p_mi: ?*Media_player_t) void {
+    _ = switch (c.LIBVLC_VERSION_MAJOR) {
+        4 => c.libvlc_media_player_stop(p_instance, p_mi),
+        else => c.libvlc_media_player_stop(p_mi),
+    };
 }
 pub fn media_player_release(p_mi: ?*Media_player_t) void {
     c.libvlc_media_player_release(p_mi);

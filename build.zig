@@ -43,7 +43,10 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     }
 
     if (target.isDarwin()) {
-        example.linkFramework("Sparkle");
+        example.linkFramework("Foundation");
+        example.linkFramework("Cocoa");
+        example.linkFramework("IOKit");
+        // example.linkFramework("Sparkle");
         example.linkSystemLibrary("vlc");
     } else if (target.isWindows()) {
         example.linkSystemLibraryName("vlc");

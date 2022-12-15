@@ -18,13 +18,13 @@ jobs:
           fetch-depth: 0
       
       - name: Install deps
+        env:
+          VLC_PLUGIN_PATH: /Applications/VLC.app/Contents/MacOS/lib
         run: |
             brew install sdl2 && \
-            brew install --cask VLC
-            # source vendor/ci/macport-ci install && \
-            # sudo port install VLC && port contents VLC && \
-            # sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/include/vlc /usr/local/include/ && \
-            # sudo ln -s /Applications/MacPorts/VLC.app/Contents/MacOS/lib/* /usr/local/lib/
+            brew install --cask VLC && \
+            sudo ln -s /Applications/VLC.app/Contents/MacOS/include/vlc /usr/local/include/ && \
+            sudo ln -s /Applications/VLC.app/Contents/MacOS/lib/* /usr/local/lib/
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2
