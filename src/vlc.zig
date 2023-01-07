@@ -18,6 +18,13 @@ const c = @cImport({
     @cDefine("struct_a", "");
 });
 
+pub const Version = struct {
+    pub const major = c.LIBVLC_VERSION_MAJOR;
+    pub const minor = c.LIBVLC_VERSION_MINOR;
+    pub const revision = c.LIBVLC_VERSION_REVISION;
+    pub const extra = c.LIBVLC_VERSION_EXTRA;
+};
+
 pub const Callback_t = c.libvlc_callback_t;
 pub const Instance_t = c.libvlc_instance_t;
 pub const Event_t = c.libvlc_event_t;
@@ -59,6 +66,12 @@ pub fn get_version() [*:0]const u8 {
 }
 pub fn get_changeset() [*:0]const u8 {
     return c.libvlc_get_changeset();
+}
+pub fn get_abiVersion() u32 {
+    return switch (Version.major) {
+        4 => @intCast(u32, c.libvlc_abi_version()),
+        else => @panic("only VLC 4.x or higher"),
+    };
 }
 pub fn log_get_context(ctx: ?*const Log_t, module: [*c][*:0]const u8, file: [*c][*:0]const u8, line: [*c]c_uint) void {
     c.libvlc_log_get_context(ctx, module, file, line);
@@ -114,13 +127,13 @@ pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]con
 
 // Media functions
 pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
-    return switch (c.LIBVLC_VERSION_MAJOR) {
+    return switch (Version.major) {
         4 => c.libvlc_media_new_location(@ptrCast([*c]const u8, psz_mrl)),
         else => c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl)),
     };
 }
 pub fn media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*Media_t {
-    return switch (c.LIBVLC_VERSION_MAJOR) {
+    return switch (Version.major) {
         4 => c.libvlc_media_new_path(@ptrCast([*c]const u8, path)),
         else => c.libvlc_media_new_path(p_instance, @ptrCast([*c]const u8, path)),
     };
@@ -138,7 +151,7 @@ pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void {
     c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
 }
 pub fn media_release(p_instance: ?*Instance_t, p_md: ?*Media_t) void {
-    _ = switch (c.LIBVLC_VERSION_MAJOR) {
+    _ = switch (Version.major) {
         4 => c.libvlc_media_release(p_instance, p_md),
         else => c.libvlc_media_release(p_md),
     };
@@ -148,7 +161,7 @@ pub fn media_player_new(p_instance: ?*Instance_t) ?*Media_player_t {
     return c.libvlc_media_player_new(p_instance);
 }
 pub fn media_player_new_from_media(p_instance: ?*Instance_t, p_md: ?*Media_t) ?*Media_player_t {
-    return switch (c.LIBVLC_VERSION_MAJOR) {
+    return switch (Version.major) {
         4 => c.libvlc_media_player_new_from_media(p_instance, p_md),
         else => c.libvlc_media_player_new_from_media(p_md),
     };
@@ -163,7 +176,7 @@ pub fn media_player_play(p_mi: ?*Media_player_t) c_int {
     return c.libvlc_media_player_play(p_mi);
 }
 pub fn media_player_stop(p_instance: ?*Instance_t, p_mi: ?*Media_player_t) void {
-    _ = switch (c.LIBVLC_VERSION_MAJOR) {
+    _ = switch (Version.major) {
         4 => c.libvlc_media_player_stop(p_instance, p_mi),
         else => c.libvlc_media_player_stop(p_mi),
     };
