@@ -32,14 +32,15 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     example.setBuildMode(mode);
     example.setTarget(target);
     example.addPackagePath("vlc", "src/vlc.zig");
-    if (option.sdl_enabled) {
-        // import SDL bindings
-        const sdl = @import("vendor/SDL2-zig/Sdk.zig");
+    _ = option.sdl_enabled;
+    // if (option.sdl_enabled) {
+    // import SDL bindings
+    const sdl = @import("vendor/SDL2-zig/Sdk.zig");
 
-        const sdk = sdl.init(b);
-        example.addPackage(sdk.getNativePackage("sdl2"));
-        sdk.link(example, .dynamic);
-    }
+    const sdk = sdl.init(b);
+    example.addPackage(sdk.getNativePackage("sdl2"));
+    sdk.link(example, .dynamic);
+    // }
 
     if (target.isDarwin()) {
         // Custom path
