@@ -15,6 +15,8 @@ pub fn build(b: *std.build.Builder) void {
         .capy_enabled = false,
     };
 
+    testLib(b, mode);
+
     const examples = b.option([]const u8, "Example", "Build example: [print-version, cli-player, sdl2-player]") orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
         make_example(b, mode, target, "print_version", "examples/print_version.zig", op);
@@ -83,4 +85,14 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
     var descr = std.fmt.bufPrintZ(&bf, "Run the {s} example", .{name}) catch unreachable;
     const run_step = b.step("run", descr);
     run_step.dependOn(&run_cmd.step);
+}
+
+fn testLib(b: *std.build.Builder, mode: std.builtin.Mode) void {
+    const tests = b.addTest("src/vlc.zig");
+    tests.setBuildMode(mode);
+    tests.linkSystemLibrary("vlc");
+    tests.linkLibC();
+
+    const test_step = b.step("test", "Run library tests");
+    test_step.dependOn(&tests.step);
 }
