@@ -1,3 +1,6 @@
 [submodule "vendor/SDL2-zig"]
 	path = vendor/SDL2-zig
 	url = https://github.com/MasterQ32/SDL.zig
+[submodule "vendor/capy"]
+	path = vendor/capy
+	url = https://github.com/capy-ui/capy
