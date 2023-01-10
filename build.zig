@@ -2,7 +2,7 @@ const std = @import("std");
 
 const Options = struct {
     sdl_enabled: bool,
-    // capy_enabled: bool, //TODO
+    capy_enabled: bool,
 };
 
 pub fn build(b: *std.build.Builder) void {
@@ -10,7 +10,10 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
-    var op = Options{ .sdl_enabled = false };
+    var op = Options{
+        .sdl_enabled = false,
+        .capy_enabled = false,
+    };
 
     const examples = b.option([]const u8, "Example", "Build example: [print-version, cli-player, sdl2-player]") orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
@@ -22,6 +25,10 @@ pub fn build(b: *std.build.Builder) void {
     if (std.mem.eql(u8, examples, "sdl-player")) {
         op.sdl_enabled = true;
         make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", op);
+    }
+     if (std.mem.eql(u8, examples, "capy-player")) {
+        op.capy_enabled = true;
+        make_example(b, mode, target, "capy-player", "examples/capy_player.zig", op);
     }
 }
 
@@ -40,6 +47,12 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
         example.addPackage(sdk.getNativePackage("sdl2"));
         sdk.link(example, .dynamic);
     }
+
+    // if(option.capy_enabled) {
+        // import Capy-UI
+        const capy_install = @import("vendor/capy/build_capy.zig").install;
+        capy_install(example, .{}) catch @panic("Error on Capy-UI installer");
+    // }
 
     if (target.isDarwin()) {
         // Custom path
