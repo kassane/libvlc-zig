@@ -16,6 +16,9 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: master
       
       - name: Install deps
         env:
@@ -26,11 +29,8 @@ jobs:
             sudo ln -s /Applications/VLC.app/Contents/MacOS/include/vlc /usr/local/include/ && \
             sudo ln -s /Applications/VLC.app/Contents/MacOS/lib/* /usr/local/lib/
 
-      - name: Install zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.10.0
-          
-      - name: Build & Run
-        run: |
-            zig build run -freference-trace
+      - name: Build
+        run: zig build -Doptimize=ReleaseSafe -fsummary -freference-trace
+      
+      - name: run print_version (example)
+        run: zig build run -Doptimize=ReleaseSafe

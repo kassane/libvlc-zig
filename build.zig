@@ -1,50 +1,66 @@
 const std = @import("std");
 
-const Options = struct {
-    sdl_enabled: bool,
-    // capy_enabled: bool, //TODO
-};
-
-pub fn build(b: *std.build.Builder) void {
-    b.prominent_compile_errors = true;
-    const mode = b.standardReleaseOptions();
+pub fn build(b: *std.Build) void {
+    if (comptime !checkVersion())
+        @compileError("Please! Update zig toolchain >= 0.11!");
     const target = b.standardTargetOptions(.{});
-
-    var op = Options{ .sdl_enabled = false };
-
-    testLib(b, mode);
+    const optimize = b.standardOptimizeOption(.{});
 
     const examples = b.option([]const u8, "Example", "Build example: [print-version, cli-player, sdl2-player]") orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
-        make_example(b, mode, target, "print_version", "examples/print_version.zig", op);
+        make_example(b, .{
+            .sdl_enabled = false,
+            .mode = optimize,
+            .target = target,
+            .name = "print_version",
+            .path = "examples/print_version.zig",
+        });
 
     if (std.mem.eql(u8, examples, "cli-player"))
-        make_example(b, mode, target, "cli-player", "examples/cli_player.zig", op);
+        make_example(b, .{
+            .sdl_enabled = false,
+            .mode = optimize,
+            .target = target,
+            .name = "cli-player",
+            .path = "examples/cli_player.zig",
+        });
 
     if (std.mem.eql(u8, examples, "sdl-player")) {
-        op.sdl_enabled = true;
-        make_example(b, mode, target, "sdl-player", "examples/sdl_player.zig", op);
+        make_example(b, .{
+            .sdl_enabled = true,
+            .mode = optimize,
+            .target = target,
+            .name = "sdl-player",
+            .path = "examples/sdl_player.zig",
+        });
     }
 }
 
-fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.CrossTarget, name: []const u8, path: []const u8, option: Options) void {
-    var bf: [100]u8 = undefined;
+fn make_example(b: *std.Build, info: BuildInfo) void {
+    const example = b.addExecutable(.{
+        .name = info.name,
+        .target = info.target,
+        .optimize = info.mode,
+        .root_source_file = .{ .path = info.path },
+    });
 
-    const example = b.addExecutable(name, path);
-    example.setBuildMode(mode);
-    example.setTarget(target);
-    example.addPackagePath("vlc", "src/vlc.zig");
-    _ = option.sdl_enabled;
-    // if (option.sdl_enabled) {
-    // import SDL bindings
-    const sdl = @import("vendor/SDL2-zig/Sdk.zig");
+    example.addAnonymousModule("vlc", .{
+        .source_file = .{
+            .path = "src/vlc.zig",
+        },
+    });
 
-    const sdk = sdl.init(b);
-    example.addPackage(sdk.getNativePackage("sdl2"));
-    sdk.link(example, .dynamic);
-    // }
+    if (info.sdl_enabled) {
+        const libsdl_dep = b.dependency("libsdl", .{
+            .target = info.target,
+            .optimize = info.mode,
+        });
+        const libsdl = libsdl_dep.artifact("sdl");
+        example.linkLibrary(libsdl);
+        example.installLibraryHeaders(libsdl);
+    }
 
-    if (target.isDarwin()) {
+    if (info.target.isDarwin()) {
         // Custom path
         example.addIncludePath("/usr/local/include");
         example.addLibraryPath("/usr/local/lib");
@@ -55,12 +71,21 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
         // example.linkFramework("Sparkle");
         // Link library
         example.linkSystemLibrary("vlc");
-    } else if (target.isWindows()) {
-        example.linkSystemLibraryName("vlc");
+    } else if (info.target.isWindows()) {
+        // msys2/clang - CI
+        example.addIncludePath(switch (info.target.getCpuArch()) {
+            .x86_64 => "D:/msys64/clang64/include",
+            else => "D:/msys64/clang32/include",
+        });
+        example.addLibraryPath(switch (info.target.getCpuArch()) {
+            .x86_64 => "D:/msys64/clang64/lib",
+            else => "D:/msys64/clang32/lib",
+        });
+        example.linkSystemLibraryName("vlc.dll");
+        example.want_lto = false;
     } else {
         example.linkSystemLibrary("vlc");
     }
-
     example.linkLibC();
     example.install();
 
@@ -70,17 +95,28 @@ fn make_example(b: *std.build.Builder, mode: std.builtin.Mode, target: std.zig.C
         run_cmd.addArgs(args);
     }
 
-    var descr = std.fmt.bufPrintZ(&bf, "Run the {s} example", .{name}) catch unreachable;
+    var descr = b.fmt("Run the {s} example", .{info.name});
     const run_step = b.step("run", descr);
     run_step.dependOn(&run_cmd.step);
 }
 
-fn testLib(b: *std.build.Builder, mode: std.builtin.Mode) void {
-    const tests = b.addTest("src/vlc.zig");
-    tests.setBuildMode(mode);
-    tests.linkSystemLibrary("vlc");
-    tests.linkLibC();
+fn checkVersion() bool {
+    const builtin = @import("builtin");
+    if (!@hasDecl(builtin, "zig_version")) {
+        return false;
+    }
 
-    const test_step = b.step("test", "Run library tests");
-    test_step.dependOn(&tests.step);
+    const needed_version = std.SemanticVersion.parse("0.11.0-dev.2191") catch unreachable;
+    const version = builtin.zig_version;
+    const order = version.order(needed_version);
+    return order != .lt;
 }
+
+const BuildInfo = struct {
+    sdl_enabled: bool,
+    // capy_enabled: bool, //TODO
+    mode: std.builtin.Mode,
+    target: std.zig.CrossTarget,
+    name: []const u8,
+    path: []const u8,
+};
