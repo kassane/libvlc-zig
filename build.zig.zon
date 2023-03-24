@@ -1,0 +1,10 @@
+.{
+    .name = "libvlc",
+    .version = "0.1.0",
+    .dependencies = .{
+        .libsdl = .{
+            .url = "https://github.com/andrewrk/sdl/archive/73c38318443a98b80d7cd0cd1e18a190a85e842f.tar.gz",
+            .hash = "12202047e83332d37477811513bd6446c567efa6f03c4ae5e57585412b4ad8129cae",
+        },
+    },
+}
