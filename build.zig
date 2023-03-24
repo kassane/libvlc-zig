@@ -50,12 +50,12 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
         },
     });
 
-    const libsdl_dep = b.dependency("libsdl", .{
-        .target = info.target,
-        .optimize = info.optimize,
-    });
-    const libsdl = libsdl_dep.artifact("sdl");
     if (info.sdl_enabled) {
+        const libsdl_dep = b.dependency("libsdl", .{
+            .target = info.target,
+            .optimize = info.mode,
+        });
+        const libsdl = libsdl_dep.artifact("sdl");
         example.linkLibrary(libsdl);
         example.installLibraryHeaders(libsdl);
     }
