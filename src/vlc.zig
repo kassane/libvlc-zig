@@ -10,7 +10,7 @@
 //!    and/or other materials provided with the distribution.
 
 const std = @import("std");
-const builtin = @import("builtin");
+const nanosleep = @import("nanosleep.zig").nanosleep;
 
 const c = @cImport({
     @cInclude("vlc/vlc.h");
@@ -57,7 +57,7 @@ pub const VideoEngine_t = c.libvlc_video_engine_t;
 pub const vlc_log = std.log.scoped(.vlc);
 
 pub fn sleep(time: usize) void {
-    std.os.nanosleep(time, time * std.time.ns_per_ms);
+    nanosleep(time, time * std.time.ns_per_ms);
 }
 pub fn getError() [*:0]const u8 {
     return c.libvlc_errmsg();
