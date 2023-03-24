@@ -11,7 +11,7 @@
         <img alt="Build MacOS status" src="https://github.com/kassane/libvlc-zig/actions/workflows/Darwin.yml/badge.svg">
     </a>
     <a href="https://github.com/kassane/libvlc-zig/actions/workflows/MinGW.yml">
-        <img alt="Build MinGW status" src="https://github.com/kassane/libvlc-zig/actions/workflows/Darwin.yml/badge.svg">
+        <img alt="Build MinGW status" src="https://github.com/kassane/libvlc-zig/actions/workflows/MinGW.yml/badge.svg">
     </a>
     <a href="https://opensource.org/licenses/BSD-2-Clause" rel="nofollow">
         <img alt="BSD 2 Clause license" src="https://img.shields.io/github/license/kassane/libvlc-zig"/>
