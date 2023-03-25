@@ -27,7 +27,7 @@ Zig bindings for libVLC media framework.
 
 ## Requirements
 
-- [zig v0.10.0 or higher](https://ziglang.org/download)
+- [zig v0.11.0 or higher](https://ziglang.org/download)
 - [vlc](https://code.videolan.org/videolan/vlc)
 
 ## How to use
@@ -35,8 +35,8 @@ Zig bindings for libVLC media framework.
 ### Example
 
 ```bash
-$> zig build run -DExample="print-version" -Drelease-safe
-$> zig build run -DExample="cli-player" -Drelease-safe -- -i /path/multimedia_file
+$> zig build run -Doptimize=ReleaseSafe # print-version (default)
+$> zig build run -DExample="cli-player" -Doptimize=ReleaseSafe -- -i /path/multimedia_file
 ```
 
 ## License
