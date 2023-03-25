@@ -11,7 +11,7 @@ pub fn main() !void {
 
     const vlc_args = [_][*c]const u8{
         // Debug
-        "--verbose=3",
+        "--verbose=2",
 
         // Apply a video filter.
         //"--video-filter", "sepia",
@@ -20,6 +20,7 @@ pub fn main() !void {
 
     var mp: ?*vlc.Media_player_t = null;
     var m: ?*vlc.Media_t = null;
+    var ev: ?*vlc.Event_Manage_t = null;
 
     var argc: usize = 0;
     while (argc < args.len) {
@@ -53,17 +54,20 @@ pub fn main() !void {
                 m = vlc.media_new_location(inst, args[argc]);
             }
         }
-
         // create a media play playing environment
         mp = vlc.media_player_new_from_media(inst, m);
+        ev = vlc.media_player_event_manager(mp);
+        _ = vlc.event_attach(ev, @enumToInt(vlc.Event_e.MediaPlayerEndReached), &handle_vlc_event, null);
+        _ = vlc.media_player_play(mp);
 
+        while (vlc.media_player_get_state(mp) != @enumToInt(vlc.State_t.Ended)) {
+            // wait
+        }
         // no need to keep the media now
         defer vlc.media_release(inst, m);
 
         // play the media_player
         if (vlc.media_player_play(mp) < 0) @panic("Cannot be played!");
-
-        vlc.sleep(40);
 
         // stop playing
         vlc.media_player_stop(inst, mp);
@@ -73,6 +77,14 @@ pub fn main() !void {
 
         defer vlc.release(inst);
         break;
+    }
+}
+
+fn handle_vlc_event(event: ?*const vlc.Event_t, userdata: ?*anyopaque) callconv(.C) void {
+    _ = @TypeOf(userdata);
+
+    if (event.?.*.type == @enumToInt(vlc.Event_e.MediaPlayerEndReached)) {
+        vlcLog.info("Media playback finished.\n", .{});
     }
 }
 
