@@ -1,6 +1,6 @@
 const std = @import("std");
 const vlc = @import("vlc");
-const stdout = std.io.getStdOut().writer();
+const vlcLog = vlc.vlc_log;
 const strcmp = std.mem.eql;
 
 pub fn main() !void {
@@ -11,7 +11,7 @@ pub fn main() !void {
 
     const vlc_args = [_][*c]const u8{
         // Debug
-        "--verbose=2",
+        "--verbose=3",
 
         // Apply a video filter.
         //"--video-filter", "sepia",
@@ -37,7 +37,7 @@ pub fn main() !void {
         // create a new item
         if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
             if (args.len < 3) {
-                try stdout.print("Missing file to exec [argc:{}]!\n", .{args.len});
+                vlcLog.info("Missing file to exec [argc:{}]!\n", .{args.len});
                 break;
             } else {
                 argc += 1;
@@ -46,7 +46,7 @@ pub fn main() !void {
         }
         if (strcmp(u8, args[argc], "--url") or strcmp(u8, args[argc], "-u")) {
             if (args.len < 3) {
-                try stdout.print("Missing URL file to exec [argc: {}]!\n", .{args.len});
+                vlcLog.info("Missing URL file to exec [argc: {}]!\n", .{args.len});
                 break;
             } else {
                 argc += 1;
@@ -77,6 +77,8 @@ pub fn main() !void {
 }
 
 fn usage() !void {
+    var bw = std.io.bufferedWriter(std.io.getStdOut().writer());
+    const stdout = bw.writer();
     try stdout.print(
         \\cli-player [options]
         \\
@@ -86,4 +88,5 @@ fn usage() !void {
         \\  -h, --help:  This message
         \\{s}
     , .{"\n\r"});
+    try bw.flush();
 }
