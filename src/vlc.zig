@@ -164,6 +164,9 @@ pub fn media_release(p_instance: ?*Instance_t, p_md: ?*Media_t) void {
 pub fn media_player_new(p_instance: ?*Instance_t) ?*Media_player_t {
     return c.libvlc_media_player_new(p_instance);
 }
+pub fn media_player_event_manager(p_mi: ?*Media_player_t) ?*Event_Manage_t {
+    return c.libvlc_media_player_event_manager(p_mi);
+}
 pub fn media_player_new_from_media(p_instance: ?*Instance_t, p_md: ?*Media_t) ?*Media_player_t {
     return switch (Version.major) {
         4 => c.libvlc_media_player_new_from_media(p_instance, p_md),
@@ -570,6 +573,72 @@ pub const VideoMultiview_t = enum(c_int) {
     stereo_col = c.libvlc_video_multiview_stereo_col,
     stereo_frame = c.libvlc_video_multiview_stereo_frame,
     stereo_checkerboard = c.libvlc_video_multiview_stereo_checkerboard,
+};
+
+pub const Event_e = enum(c_int) {
+    MediaMetaChanged = c.libvlc_MediaMetaChanged,
+    MediaSubItemAdded = c.libvlc_MediaSubItemAdded,
+    MediaDurationChanged = c.libvlc_MediaDurationChanged,
+    MediaParsedChanged = c.libvlc_MediaParsedChanged,
+    MediaFreed = c.libvlc_MediaFreed,
+    MediaStateChanged = c.libvlc_MediaStateChanged,
+    MediaSubItemTreeAdded = c.libvlc_MediaSubItemTreeAdded,
+    MediaPlayerMediaChanged = c.libvlc_MediaPlayerMediaChanged,
+    MediaPlayerNothingSpecial = c.libvlc_MediaPlayerNothingSpecial,
+    MediaPlayerOpening = c.libvlc_MediaPlayerOpening,
+    MediaPlayerBuffering = c.libvlc_MediaPlayerBuffering,
+    MediaPlayerPlaying = c.libvlc_MediaPlayerPlaying,
+    MediaPlayerPaused = c.libvlc_MediaPlayerPaused,
+    MediaPlayerStopped = c.libvlc_MediaPlayerStopped,
+    MediaPlayerForward = c.libvlc_MediaPlayerForward,
+    MediaPlayerBackward = c.libvlc_MediaPlayerBackward,
+    MediaPlayerEndReached = c.libvlc_MediaPlayerEndReached,
+    MediaPlayerEncounteredError = c.libvlc_MediaPlayerEncounteredError,
+    MediaPlayerTimeChanged = c.libvlc_MediaPlayerTimeChanged,
+    MediaPlayerPositionChanged = c.libvlc_MediaPlayerPositionChanged,
+    MediaPlayerSeekableChanged = c.libvlc_MediaPlayerSeekableChanged,
+    MediaPlayerPausableChanged = c.libvlc_MediaPlayerPausableChanged,
+    MediaPlayerTitleChanged = c.libvlc_MediaPlayerTitleChanged,
+    MediaPlayerSnapshotTaken = c.libvlc_MediaPlayerSnapshotTaken,
+    MediaPlayerLengthChanged = c.libvlc_MediaPlayerLengthChanged,
+    MediaPlayerVout = c.libvlc_MediaPlayerVout,
+    MediaPlayerScrambledChanged = c.libvlc_MediaPlayerScrambledChanged,
+    MediaPlayerESAdded = c.libvlc_MediaPlayerESAdded,
+    MediaPlayerESDeleted = c.libvlc_MediaPlayerESDeleted,
+    MediaPlayerESSelected = c.libvlc_MediaPlayerESSelected,
+    MediaPlayerCorked = c.libvlc_MediaPlayerCorked,
+    MediaPlayerUncorked = c.libvlc_MediaPlayerUncorked,
+    MediaPlayerMuted = c.libvlc_MediaPlayerMuted,
+    MediaPlayerUnmuted = c.libvlc_MediaPlayerUnmuted,
+    MediaPlayerAudioVolume = c.libvlc_MediaPlayerAudioVolume,
+    MediaPlayerAudioDevice = c.libvlc_MediaPlayerAudioDevice,
+    MediaPlayerChapterChanged = c.libvlc_MediaPlayerChapterChanged,
+    MediaListItemAdded = c.libvlc_MediaListItemAdded,
+    MediaListWillAddItem = c.libvlc_MediaListWillAddItem,
+    MediaListItemDeleted = c.libvlc_MediaListItemDeleted,
+    MediaListWillDeleteItem = c.libvlc_MediaListWillDeleteItem,
+    MediaListEndReached = c.libvlc_MediaListEndReached,
+    MediaListViewItemAdded = c.libvlc_MediaListViewItemAdded,
+    MediaListViewWillAddItem = c.libvlc_MediaListViewWillAddItem,
+    MediaListViewItemDeleted = c.libvlc_MediaListViewItemDeleted,
+    MediaListViewWillDeleteItem = c.libvlc_MediaListViewWillDeleteItem,
+    MediaListPlayerPlayed = c.libvlc_MediaListPlayerPlayed,
+    MediaListPlayerNextItemSet = c.libvlc_MediaListPlayerNextItemSet,
+    MediaListPlayerStopped = c.libvlc_MediaListPlayerStopped,
+    MediaDiscovererEnded = c.libvlc_MediaDiscovererEnded,
+    RendererDiscovererItemAdded = c.libvlc_RendererDiscovererItemAdded,
+    RendererDiscovererItemDeleted = c.libvlc_RendererDiscovererItemDeleted,
+    VlmMediaAdded = c.libvlc_VlmMediaAdded,
+    VlmMediaRemoved = c.libvlc_VlmMediaRemoved,
+    VlmMediaChanged = c.libvlc_VlmMediaChanged,
+    VlmMediaInstanceStarted = c.libvlc_VlmMediaInstanceStarted,
+    VlmMediaInstanceStopped = c.libvlc_VlmMediaInstanceStopped,
+    VlmMediaInstanceStatusInit = c.libvlc_VlmMediaInstanceStatusInit,
+    VlmMediaInstanceStatusOpening = c.libvlc_VlmMediaInstanceStatusOpening,
+    VlmMediaInstanceStatusPlaying = c.libvlc_VlmMediaInstanceStatusPlaying,
+    VlmMediaInstanceStatusPause = c.libvlc_VlmMediaInstanceStatusPause,
+    VlmMediaInstanceStatusEnd = c.libvlc_VlmMediaInstanceStatusEnd,
+    VlmMediaInstanceStatusError = c.libvlc_VlmMediaInstanceStatusError,
 };
 
 test "ref all decls" {

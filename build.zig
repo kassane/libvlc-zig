@@ -25,6 +25,15 @@ pub fn build(b: *std.Build) void {
             .path = "examples/cli_player.zig",
         });
 
+    if (std.mem.eql(u8, examples, "cli-player-c"))
+        make_Cexample(b, .{
+            .sdl_enabled = false,
+            .mode = optimize,
+            .target = target,
+            .name = "cli-player-c",
+            .path = "c_examples/cli_player.c",
+        });
+
     if (std.mem.eql(u8, examples, "sdl-player")) {
         make_example(b, .{
             .sdl_enabled = true,
@@ -73,14 +82,8 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
         example.linkSystemLibrary("vlc");
     } else if (info.target.isWindows()) {
         // msys2/clang - CI
-        example.addIncludePath(switch (info.target.getCpuArch()) {
-            .x86_64 => "D:/msys64/clang64/include",
-            else => "D:/msys64/clang32/include",
-        });
-        example.addLibraryPath(switch (info.target.getCpuArch()) {
-            .x86_64 => "D:/msys64/clang64/lib",
-            else => "D:/msys64/clang32/lib",
-        });
+        example.addIncludePath(msys2Inc(info.target));
+        example.addLibraryPath(msys2Lib(info.target));
         example.linkSystemLibraryName("vlc.dll");
         example.want_lto = false;
     } else {
@@ -96,6 +99,67 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
     }
 
     var descr = b.fmt("Run the {s} example", .{info.name});
+    const run_step = b.step("run", descr);
+    run_step.dependOn(&run_cmd.step);
+}
+
+fn make_Cexample(b: *std.Build, info: BuildInfo) void {
+    const example = b.addExecutable(.{
+        .name = info.name,
+        .target = info.target,
+        .optimize = info.mode,
+    });
+    example.disable_sanitize_c = true;
+    example.addCSourceFile(info.path, &.{
+        "-Wall",
+        "-Wextra",
+    });
+    example.addAnonymousModule("vlc", .{
+        .source_file = .{
+            .path = "src/vlc.zig",
+        },
+    });
+
+    if (info.sdl_enabled) {
+        const libsdl_dep = b.dependency("libsdl", .{
+            .target = info.target,
+            .optimize = info.mode,
+        });
+        const libsdl = libsdl_dep.artifact("sdl");
+        example.linkLibrary(libsdl);
+        example.installLibraryHeaders(libsdl);
+    }
+
+    if (info.target.isDarwin()) {
+        // Custom path
+        example.addIncludePath("/usr/local/include");
+        example.addLibraryPath("/usr/local/lib");
+        // Link Frameworks
+        example.linkFramework("Foundation");
+        example.linkFramework("Cocoa");
+        example.linkFramework("IOKit");
+        // example.linkFramework("Sparkle");
+        // Link library
+        example.linkSystemLibrary("vlc");
+    } else if (info.target.isWindows()) {
+        // msys2/clang - CI
+        example.addIncludePath(msys2Inc(info.target));
+        example.addLibraryPath(msys2Lib(info.target));
+        example.linkSystemLibraryName("vlc.dll");
+        example.want_lto = false;
+    } else {
+        example.linkSystemLibrary("vlc");
+    }
+    example.linkLibC();
+    example.install();
+
+    const run_cmd = example.run();
+    run_cmd.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
+
+    var descr = b.fmt("Run the {s} - C example", .{info.name});
     const run_step = b.step("run", descr);
     run_step.dependOn(&run_cmd.step);
 }
@@ -120,3 +184,19 @@ const BuildInfo = struct {
     name: []const u8,
     path: []const u8,
 };
+
+fn msys2Inc(target: std.zig.CrossTarget) []const u8 {
+    return switch (target.getCpuArch()) {
+        .x86_64 => "D:/msys64/clang64/include",
+        .aarch64 => "D:/msys64/clangarm64/include",
+        else => "D:/msys64/clang32/include",
+    };
+}
+
+fn msys2Lib(target: std.zig.CrossTarget) []const u8 {
+    return switch (target.getCpuArch()) {
+        .x86_64 => "D:/msys64/clang64/lib",
+        .aarch64 => "D:/msys64/clangarm64/lib",
+        else => "D:/msys64/clang32/lib",
+    };
+}
