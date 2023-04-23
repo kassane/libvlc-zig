@@ -141,9 +141,9 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
         example.linkLibCpp()
     else
         example.linkLibC();
-    example.install();
+    b.installArtifact(example);
 
-    const run_cmd = example.run();
+    const run_cmd = b.addRunArtifact(example);
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
         run_cmd.addArgs(args);
@@ -160,7 +160,7 @@ fn checkVersion() bool {
         return false;
     }
 
-    const needed_version = std.SemanticVersion.parse("0.11.0-dev.2191") catch unreachable;
+    const needed_version = std.SemanticVersion.parse("0.11.0-dev.2666") catch unreachable;
     const version = builtin.zig_version;
     const order = version.order(needed_version);
     return order != .lt;
@@ -195,4 +195,12 @@ fn msys2Lib(target: std.zig.CrossTarget) []const u8 {
         .aarch64 => "D:/msys64/clangarm64/lib",
         else => "D:/msys64/clang32/lib",
     };
+}
+
+pub fn module(b: *std.Build) *std.Build.Module {
+    return b.createModule(.{
+        .source_file = .{
+            .path = "src/vlc.zig",
+        },
+    });
 }

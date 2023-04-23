@@ -1,12 +1,6 @@
 name: Linux
 
-on:
-  push:
-    paths:
-      - '**.zig'
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+on: [push, pull_request]
 
 jobs:
   build:
@@ -18,7 +12,7 @@ jobs:
           fetch-depth: 0
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: 0.11.0-dev.2666+1e207f1ed
       
       - name: Install dependences
         run: |
