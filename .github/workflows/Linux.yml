@@ -12,16 +12,15 @@ jobs:
           fetch-depth: 0
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.11.0-dev.2666+1e207f1ed
+          version: master
       
       - name: Install dependences
         run: |
             sudo apt update
             sudo apt install libvlc-dev libsdl2-dev -y
 
-      - name: build
-        run: zig build -Doptimize=ReleaseSafe -fsummary -freference-trace
+      - name: Build Summary
+        run: zig build --summary all -freference-trace
 
       - name: run print_version (example)
-        run: |
-            zig build run -Doptimize=ReleaseSafe
+        run: zig build run

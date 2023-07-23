@@ -33,7 +33,7 @@ pub fn main() !void {
         }
 
         // load the vlc engine
-        var inst: ?*vlc.Instance_t = vlc.new(@intCast(c_int, argc), &vlc_args);
+        var inst: ?*vlc.Instance_t = vlc.new(@as(c_int, @intCast(argc)), &vlc_args);
 
         // create a new item
         if (strcmp(u8, args[argc], "--input") or strcmp(u8, args[argc], "-i")) {
@@ -57,10 +57,10 @@ pub fn main() !void {
         // create a media play playing environment
         mp = vlc.media_player_new_from_media(inst, m);
         ev = vlc.media_player_event_manager(mp);
-        _ = vlc.event_attach(ev, @enumToInt(vlc.Event_e.MediaPlayerEndReached), &handle_vlc_event, null);
+        _ = vlc.event_attach(ev, @intFromEnum(vlc.Event_e.MediaPlayerEndReached), &handle_vlc_event, null);
         _ = vlc.media_player_play(mp);
 
-        while (vlc.media_player_get_state(mp) != @enumToInt(vlc.State_t.Ended)) {
+        while (vlc.media_player_get_state(mp) != @intFromEnum(vlc.State_t.Ended)) {
             // wait
         }
         // no need to keep the media now
@@ -83,7 +83,7 @@ pub fn main() !void {
 fn handle_vlc_event(event: ?*const vlc.Event_t, userdata: ?*anyopaque) callconv(.C) void {
     _ = @TypeOf(userdata);
 
-    if (event.?.*.type == @enumToInt(vlc.Event_e.MediaPlayerEndReached)) {
+    if (event.?.*.type == @intFromEnum(vlc.Event_e.MediaPlayerEndReached)) {
         vlcLog.info("Media playback finished.\n", .{});
     }
 }

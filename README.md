@@ -36,7 +36,7 @@ Zig bindings for libVLC media framework. Some of the features provided by libVLC
 
 ```bash
 $> zig build run -Doptimize=ReleaseSafe # print-version (default)
-$> zig build run -DExample="cli-player" -Doptimize=ReleaseSafe -- -i /path/multimedia_file
+$> zig build run -DExample="cliPlayer-{c,cpp,zig}" -Doptimize=ReleaseSafe -- -i /path/multimedia_file
 ```
 
 ## How to contribute to the libvlc-zig project?

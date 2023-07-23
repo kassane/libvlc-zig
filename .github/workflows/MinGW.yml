@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.11.0-dev.2666+1e207f1ed
+          version: master
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
@@ -29,9 +29,6 @@ jobs:
           location: D:\
           install: git mingw-w64-clang-${{ matrix.arch }}-vlc
           update: true
-      
-      # - name: install windows sdk
-      #   run: choco install windows-sdk-10.0
       
       - name: Move Checkout
         run: |
@@ -42,13 +39,13 @@ jobs:
         if: ${{ matrix.arch == 'i686' }}
         run: |
             cd /C/_
-            zig build -fsummary -freference-trace -Doptimize=ReleaseSafe -Dtarget=x86-windows-gnu
-            zig build run -Doptimize=ReleaseSafe -Dtarget=x86-windows-gnu
+            zig build --summary all -freference-trace -Dtarget=x86-windows-gnu
+            zig build run -Dtarget=x86-windows-gnu
         
       - name: Build & Tests (x86_x64)
         shell: msys2 {0}
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
             cd /C/_
-            zig build -fsummary -freference-trace -Doptimize=ReleaseSafe -Dtarget=native-windows-gnu
-            zig build run -Doptimize=ReleaseSafe -Dtarget=native-windows-gnu
+            zig build --summary all -freference-trace -Dtarget=native-windows-gnu
+            zig build run -Dtarget=native-windows-gnu

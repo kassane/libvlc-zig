@@ -9,7 +9,7 @@ pub fn build(b: *std.Build) void {
     const examples = b.option(
         []const u8,
         "Example",
-        "Build example: [print-version, cliPlayer-(c,cpp,zig), sdl2-player]",
+        "Build example: [print-version, cliPlayer-(c,cpp,zig)]",
     ) orelse "print-version";
     if (std.mem.eql(u8, examples, "print-version"))
         make_example(b, .{
@@ -50,17 +50,6 @@ pub fn build(b: *std.Build) void {
             .name = "cliPlayer-cpp",
             .path = "c_examples/cli_player.cpp",
         });
-
-    if (std.mem.eql(u8, examples, "sdl-player")) {
-        make_example(b, .{
-            .sdl_enabled = true,
-            .filetype = .zig,
-            .mode = optimize,
-            .target = target,
-            .name = "sdl-player",
-            .path = "examples/sdl_player.zig",
-        });
-    }
 }
 
 fn make_example(b: *std.Build, info: BuildInfo) void {
@@ -160,7 +149,7 @@ fn checkVersion() bool {
         return false;
     }
 
-    const needed_version = std.SemanticVersion.parse("0.11.0-dev.2666") catch unreachable;
+    const needed_version = std.SemanticVersion.parse("0.11.0-dev.4183") catch unreachable;
     const version = builtin.zig_version;
     const order = version.order(needed_version);
     return order != .lt;

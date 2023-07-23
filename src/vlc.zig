@@ -73,7 +73,7 @@ pub fn get_changeset() [*:0]const u8 {
 }
 pub fn get_abiVersion() u32 {
     return switch (Version.major) {
-        4 => @intCast(u32, c.libvlc_abi_version()),
+        4 => @as(u32, @intCast(c.libvlc_abi_version())),
         else => @panic("only VLC 4.x or higher"),
     };
 }
@@ -132,14 +132,14 @@ pub fn set_app_id(p_instance: ?*Instance_t, id: [*:0]const u8, version: [*:0]con
 // Media functions
 pub fn media_new_location(p_instance: ?*Instance_t, psz_mrl: [*:0]const u8) ?*Media_t {
     return switch (Version.major) {
-        4 => c.libvlc_media_new_location(@ptrCast([*c]const u8, psz_mrl)),
-        else => c.libvlc_media_new_location(p_instance, @ptrCast([*c]const u8, psz_mrl)),
+        4 => c.libvlc_media_new_location(@as([*c]const u8, @ptrCast(psz_mrl))),
+        else => c.libvlc_media_new_location(p_instance, @as([*c]const u8, @ptrCast(psz_mrl))),
     };
 }
 pub fn media_new_path(p_instance: ?*Instance_t, path: [*:0]const u8) ?*Media_t {
     return switch (Version.major) {
-        4 => c.libvlc_media_new_path(@ptrCast([*c]const u8, path)),
-        else => c.libvlc_media_new_path(p_instance, @ptrCast([*c]const u8, path)),
+        4 => c.libvlc_media_new_path(@as([*c]const u8, @ptrCast(path))),
+        else => c.libvlc_media_new_path(p_instance, @as([*c]const u8, @ptrCast(path))),
     };
 }
 pub fn media_new_fd(p_instance: ?*Instance_t, fd: c_int) ?*Media_t {
@@ -149,10 +149,10 @@ pub fn media_new_callbacks(p_instance: ?*Instance_t, open: MediaOpen_callback, r
     return c.libvlc_media_new_callbacks(p_instance, open, read, seek, close, ptr);
 }
 pub fn media_new_as_node(p_instance: ?*Instance_t, psz_name: [*:0]const u8) ?*Media_t {
-    return c.libvlc_media_new_as_node(p_instance, @ptrCast([*c]const u8, psz_name));
+    return c.libvlc_media_new_as_node(p_instance, @as([*c]const u8, @ptrCast(psz_name)));
 }
 pub fn media_add_option(p_md: ?*Media_t, psz_options: [*:0]const u8) void {
-    c.libvlc_media_add_option(p_md, @ptrCast([*c]const u8, psz_options));
+    c.libvlc_media_add_option(p_md, @as([*c]const u8, @ptrCast(psz_options)));
 }
 pub fn media_release(p_instance: ?*Instance_t, p_md: ?*Media_t) void {
     _ = switch (Version.major) {
