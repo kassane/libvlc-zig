@@ -2,13 +2,9 @@
     .name = "libvlc",
     .version = "0.2.0",
     .dependencies = .{
-        // .libsdl = .{
-        //     .url = "https://github.com/andrewrk/sdl/archive/73c38318443a98b80d7cd0cd1e18a190a85e842f.tar.gz",
-        //     .hash = "12202047e83332d37477811513bd6446c567efa6f03c4ae5e57585412b4ad8129cae",
-        // },
         .libvlcpp = .{
-            .url = "https://github.com/kassane/libvlcpp/archive/05c04d2cdf6be4ef7b5a918b596884fda07a37ce.tar.gz",
-            .hash = "1220ce41db782667e870339f61716ca95b4ec8f621d5193faa295b8f5a6dae5cd4a7",
+            .url = "https://github.com/kassane/libvlcpp/archive/00424d823873612c795f59eb1fc9a29c7360782a.tar.gz",
+            .hash = "12206324828247b2a8a4ec8a86e40e0ef8846971f95083e70dfb3acee2b1aa10ca5e",
         },
     },
 }

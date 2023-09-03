@@ -79,11 +79,11 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
     });
 
     if (info.filetype == .c or info.filetype == .cpp)
-        example.addCSourceFile(info.path, &.{
+        example.addCSourceFile(.{ .file = .{ .path = info.path }, .flags = &.{
             "-Wall",
             "-Werror",
             "-Wextra",
-        });
+        } });
 
     if (info.sdl_enabled) {
         const libsdl_dep = b.dependency("libsdl", .{
@@ -102,13 +102,13 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
         });
         const libvlcpp = libvlcpp_dep.artifact("vlcpp");
         example.installLibraryHeaders(libvlcpp);
-        example.addIncludePath("zig-out/include");
+        example.addIncludePath(.{ .path = "zig-out/include" });
     }
 
     if (info.target.isDarwin()) {
         // Custom path
-        example.addIncludePath("/usr/local/include");
-        example.addLibraryPath("/usr/local/lib");
+        example.addIncludePath(.{ .path = "/usr/local/include" });
+        example.addLibraryPath(.{ .path = "/usr/local/lib" });
 
         // Link Frameworks
         example.linkFramework("Foundation");
@@ -119,8 +119,8 @@ fn make_example(b: *std.Build, info: BuildInfo) void {
         example.linkSystemLibrary("vlc");
     } else if (info.target.isWindows()) {
         // msys2/clang - CI
-        example.addIncludePath(msys2Inc(info.target));
-        example.addLibraryPath(msys2Lib(info.target));
+        example.addIncludePath(.{ .path = msys2Inc(info.target) });
+        example.addLibraryPath(.{ .path = msys2Lib(info.target) });
         example.linkSystemLibraryName("vlc.dll");
         example.want_lto = false;
     } else {
@@ -149,7 +149,7 @@ fn checkVersion() bool {
         return false;
     }
 
-    const needed_version = std.SemanticVersion.parse("0.11.0-dev.4183") catch unreachable;
+    const needed_version = std.SemanticVersion.parse("0.11.0") catch unreachable;
     const version = builtin.zig_version;
     const order = version.order(needed_version);
     return order != .lt;
